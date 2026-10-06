@@ -79,6 +79,18 @@ claude mcp add workout-log --scope user -- node /絶対パス/src/mcp.js
 Web アプリの「Claude 連携」タブで **Claude 用にコピー** を押すと、記録が Markdown 形式でコピーされます。
 claude.ai やスマホの Claude アプリのチャットにそのまま貼り付けて相談できます。
 
+
+## 外出先でも使えるスマホ版（claude.ai Artifact）
+
+`artifact/index.html` は claude.ai 上で動くスマホ向け版です。インストール不要で、Claude にログインしていればどこからでも開けます。
+
+- 記録は claude.ai 上に保存され、どの端末から開いても同じ記録が見られます。
+- 「ベンチ 80kg を 8 回 3 セット」のように文章で書くと、Claude がフォームに変換します。
+- 「Claude」タブで、記録をもとに振り返りや次回メニューを相談できます。
+- Claude Code からは `ArtifactData` ツールで記録を読み書きできます（コレクション `workouts`）。
+
+このスマホ版の記録は、PC 版（`data/workouts.json`）とは別に保存されます。
+
 ## データ
 
 - 既定の保存先: `data/workouts.json`（Git 管理外）

@@ -1,0 +1,642 @@
+<title>筋トレログ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  /* Layout: one phone-width column; sticky tab bar at the bottom like a native app; plates-and-chalk palette */
+  :root {
+    --bg: #eef0f2;
+    --surface: #ffffff;
+    --fg: #15191e;
+    --muted: #5d6670;
+    --line: #d5dae0;
+    --accent: #1f56d1;
+    --accent-fg: #ffffff;
+    --accent-soft: #e2eafc;
+    --claude: #a35a00;
+    --claude-soft: #fbeedb;
+    --danger: #c42b2b;
+    --ok: #1d7a46;
+    --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --font-body: "IBM Plex Sans JP", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101317; --surface: #1a1f25; --fg: #e9edf1; --muted: #98a2ad; --line: #2c333b;
+      --accent: #6d97ff; --accent-fg: #0c1220; --accent-soft: #1c2a4a;
+      --claude: #f2b45a; --claude-soft: #3a2a12; --danger: #ff7a7a; --ok: #5fd18f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101317; --surface: #1a1f25; --fg: #e9edf1; --muted: #98a2ad; --line: #2c333b;
+    --accent: #6d97ff; --accent-fg: #0c1220; --accent-soft: #1c2a4a;
+    --claude: #f2b45a; --claude-soft: #3a2a12; --danger: #ff7a7a; --ok: #5fd18f;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--font-body); }
+  .wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 104px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  h1 { font: 700 30px/1 var(--font-display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
+  h1 small { font: 500 13px var(--font-body); color: var(--muted); letter-spacing: 0; text-transform: none; margin-left: 6px; }
+  h2 { font: 600 20px/1.2 var(--font-display); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 12px; text-wrap: balance; }
+  .status { font-size: 12px; color: var(--muted); }
+  .status.err { color: var(--danger); }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
+  .stack { display: grid; gap: 12px; }
+  label, .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; letter-spacing: .02em; }
+  input, textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--fg); font: inherit; font-size: 16px;
+  }
+  textarea { min-height: 72px; resize: vertical; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .grid2 { grid-template-columns: 1fr; } }
+
+  button { font: inherit; cursor: pointer; }
+  .btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-weight: 500; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 700; }
+  .btn.claude { background: var(--claude-soft); border-color: transparent; color: var(--claude); font-weight: 700; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.wide { width: 100%; }
+  .ghost { background: none; border: none; color: var(--muted); padding: 6px 8px; border-radius: 6px; font-size: 13px; }
+  .ghost:hover { color: var(--fg); background: var(--bg); }
+  .ghost.danger:hover, .ghost.armed { color: var(--danger); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row.end { justify-content: flex-end; }
+
+  /* Claude quick entry */
+  .quick { border-color: var(--claude-soft); }
+  .quick .label { color: var(--claude); font-weight: 700; }
+  .hint { font-size: 12px; color: var(--muted); margin: 0; }
+
+  /* exercise editor */
+  .ex { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+  .ex-head { display: flex; gap: 8px; align-items: end; }
+  .ex-head > div { flex: 1; min-width: 0; }
+  .set { display: grid; grid-template-columns: 32px 1fr 14px 1fr 32px; gap: 6px; align-items: center; }
+  .set .n { font: 600 18px var(--font-display); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .set .x { color: var(--muted); text-align: center; }
+  .set input { text-align: right; font-variant-numeric: tabular-nums; }
+  .set-labels { display: grid; grid-template-columns: 32px 1fr 14px 1fr 32px; gap: 6px; font-size: 11px; color: var(--muted); }
+  .set-labels span:nth-child(2), .set-labels span:nth-child(4) { text-align: right; padding-right: 12px; }
+
+  .banner { border-radius: 8px; padding: 10px 12px; font-size: 13px; background: var(--claude-soft); color: var(--claude); }
+  .banner.edit { background: var(--accent-soft); color: var(--accent); }
+
+  /* summary */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+  .stat .k { font-size: 11px; color: var(--muted); }
+  .stat .v { font: 700 28px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+  .stat .v small { font: 500 13px var(--font-body); color: var(--muted); margin-left: 2px; }
+
+  /* history */
+  .day { display: grid; gap: 8px; }
+  .wk { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .wk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .wk-date { font: 700 20px var(--font-display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .wk-title { font-weight: 500; margin-left: 6px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+  .badge.claude { background: var(--claude-soft); color: var(--claude); }
+  .wk ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+  .wk li { display: grid; grid-template-columns: minmax(0, 9em) 1fr; gap: 8px; }
+  .wk li b { font-weight: 500; overflow-wrap: anywhere; }
+  .sets { font-variant-numeric: tabular-nums; color: var(--fg); }
+  .wk .meta { font-size: 12px; color: var(--muted); margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .wk .notes { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
+  /* records */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; }
+  td .big { font: 700 20px var(--font-display); }
+  td .sub { display: block; font-size: 11px; color: var(--muted); }
+
+  /* ask claude */
+  .answer { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.75; background: var(--bg); border-radius: 8px; padding: 12px; min-height: 3em; }
+  .answer.thinking { color: var(--muted); }
+  pre.export { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: var(--bg); border-radius: 8px; padding: 12px; margin: 0; max-height: 260px; overflow-y: auto; }
+
+  .empty { text-align: center; color: var(--muted); padding: 32px 16px; display: grid; gap: 8px; justify-items: center; }
+  .empty b { color: var(--fg); font-size: 16px; }
+
+  /* bottom tab bar */
+  nav.tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  }
+  nav.tabs button { background: none; border: none; color: var(--muted); padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 500; display: grid; justify-items: center; gap: 2px; }
+  nav.tabs button svg { width: 22px; height: 22px; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+
+  #toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; max-width: calc(100% - 32px); }
+  #toast.show { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Workout Log<small>筋トレログ</small></h1>
+    <span class="status" id="status">接続中…</span>
+  </header>
+
+  <!-- 記録 -->
+  <section id="tab-log" class="stack">
+    <div class="panel quick" id="quick" hidden>
+      <div>
+        <label class="label" for="quick-text">話すように入力 → Claude が記録に変換</label>
+        <textarea id="quick-text" placeholder="例: ベンチ80kgを8回3セット、インクラインDB 24kg×10,10,9、最後に懸垂を自重で8回2セット"></textarea>
+      </div>
+      <div class="row end">
+        <button class="btn claude" id="quick-btn" type="button">Claude で読み取る</button>
+      </div>
+      <p class="hint" id="quick-hint">読み取った内容は下のフォームに入ります。確認してから保存してください。</p>
+    </div>
+
+    <form class="panel" id="form" novalidate>
+      <div class="banner" id="form-banner" hidden></div>
+      <div class="grid2">
+        <div><label for="f-date">日付</label><input id="f-date" type="date" required></div>
+        <div><label for="f-title">タイトル（任意）</label><input id="f-title" placeholder="例: 胸の日 / Push"></div>
+      </div>
+      <div id="f-exercises" class="stack"></div>
+      <button type="button" class="btn" id="add-ex">＋ 種目を追加</button>
+      <div><label for="f-notes">メモ（任意）</label><textarea id="f-notes" placeholder="体調、フォームの気づきなど"></textarea></div>
+      <div class="row end">
+        <button type="button" class="btn" id="form-reset">クリア</button>
+        <button type="submit" class="btn primary" id="form-save">保存</button>
+      </div>
+    </form>
+    <datalist id="ex-names"></datalist>
+  </section>
+
+  <!-- 履歴 -->
+  <section id="tab-history" class="stack" hidden>
+    <div class="stats" id="stats"></div>
+    <input id="filter" placeholder="種目で絞り込み（例: ベンチ）" aria-label="種目で絞り込み">
+    <div id="history" class="stack"></div>
+  </section>
+
+  <!-- 自己ベスト -->
+  <section id="tab-records" class="stack" hidden>
+    <div class="panel">
+      <h2>Personal Records</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>種目</th><th class="num">最大重量</th><th class="num">推定1RM</th><th class="num">回数</th></tr></thead>
+          <tbody id="records"></tbody>
+        </table>
+      </div>
+      <p class="hint">推定1RM は Epley 式：重量 ×（1 + 回数 ÷ 30）</p>
+    </div>
+  </section>
+
+  <!-- Claude -->
+  <section id="tab-claude" class="stack" hidden>
+    <div class="panel" id="ask-panel" hidden>
+      <h2>Ask Claude</h2>
+      <div class="row">
+        <button class="btn claude" type="button" data-ask="直近の記録を振り返って、良かった点と改善点を教えてください。">振り返り</button>
+        <button class="btn claude" type="button" data-ask="記録をもとに、次回のトレーニングメニュー（種目・重量・回数・セット数）を提案してください。">次回メニュー</button>
+        <button class="btn claude" type="button" data-ask="部位ごとのトレーニングバランスを分析し、足りていない部位があれば教えてください。">部位バランス</button>
+      </div>
+      <div>
+        <label for="ask-text">自由に質問</label>
+        <textarea id="ask-text" placeholder="例: ベンチ100kgを3か月で挙げるには？"></textarea>
+      </div>
+      <div class="row end">
+        <button class="btn" type="button" id="ask-stop" hidden>停止</button>
+        <button class="btn primary" type="button" id="ask-btn">質問する</button>
+      </div>
+      <div class="answer" id="answer" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2>Copy for Claude</h2>
+      <p class="hint">記録をテキストでコピーして、Claude のチャットに貼り付けて相談できます。</p>
+      <div class="row">
+        <select id="export-days" aria-label="期間" style="flex:1; min-width: 0">
+          <option value="7">直近 7 日</option>
+          <option value="30" selected>直近 30 日</option>
+          <option value="90">直近 90 日</option>
+          <option value="3650">すべて</option>
+        </select>
+        <button class="btn primary" type="button" id="copy">コピー</button>
+      </div>
+      <pre class="export" id="export"></pre>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="log" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>記録</button>
+  <button role="tab" data-tab="history" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>履歴</button>
+  <button role="tab" data-tab="records" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3M19 12h3M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/></svg>自己ベスト</button>
+  <button role="tab" data-tab="claude" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>Claude</button>
+</nav>
+<div id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const S = { db: null, sample: null, workouts: [], loaded: false, editingId: null, source: 'app', askAbort: null };
+
+  // ---------- utils ----------
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  function ymd(d) {
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  const today = () => ymd(new Date());
+  function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d); }
+  const e1rm = (w, r) => (!w || !r) ? 0 : r === 1 ? w : Math.round(w * (1 + r / 30) * 10) / 10;
+  const volume = (w) => w.exercises.reduce((s, e) => s + e.sets.reduce((a, x) => a + x.weight * x.reps, 0), 0);
+  const fmtSets = (sets) => {
+    // 同じ重量×回数が続くものは「80kg×8×3」にまとめる
+    const out = [];
+    for (const s of sets) {
+      const last = out[out.length - 1];
+      if (last && last.weight === s.weight && last.reps === s.reps) last.n++;
+      else out.push({ ...s, n: 1 });
+    }
+    return out.map((s) => `${s.weight ? s.weight + 'kg' : '自重'}×${s.reps}${s.n > 1 ? `×${s.n}` : ''}`).join(', ');
+  };
+  const sorted = () => [...S.workouts].sort((a, b) => b.date.localeCompare(a.date) || String(b.createdAt).localeCompare(String(a.createdAt)));
+
+  function validate(input) {
+    const date = input.date || today();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('日付が正しくありません');
+    const exercises = (input.exercises || []).map((ex) => ({
+      name: String(ex.name || '').trim().replace(/\s+/g, ' '),
+      sets: (ex.sets || []).map((s) => ({ weight: Number(s.weight) || 0, reps: Math.round(Number(s.reps)) }))
+        .filter((s) => Number.isFinite(s.weight) && s.weight >= 0 && s.reps > 0),
+    })).filter((ex) => ex.name || ex.sets.length);
+    if (!exercises.length) throw new Error('種目を 1 つ以上入力してください');
+    for (const ex of exercises) {
+      if (!ex.name) throw new Error('種目名が空の行があります');
+      if (!ex.sets.length) throw new Error(`「${ex.name}」の回数を入力してください`);
+    }
+    return { date, title: String(input.title || '').trim(), notes: String(input.notes || '').trim(), exercises };
+  }
+
+  function toMarkdown(list) {
+    if (!list.length) return '記録はまだありません。';
+    return list.map((w) => [
+      `### ${w.date}${w.title ? ' ' + w.title : ''}`,
+      ...w.exercises.map((e) => `- ${e.name}: ${e.sets.map((s) => `${s.weight}kg×${s.reps}`).join(', ')}`),
+      ...(w.notes ? [`- メモ: ${w.notes}`] : []),
+    ].join('\n')).join('\n\n');
+  }
+
+  function records() {
+    const m = new Map();
+    for (const w of S.workouts) for (const e of w.exercises) {
+      const r = m.get(e.name) || { name: e.name, sessions: 0, max: null, best: null };
+      r.sessions++;
+      for (const s of e.sets) {
+        if (!r.max || s.weight > r.max.weight || (s.weight === r.max.weight && s.reps > r.max.reps)) r.max = { ...s, date: w.date };
+        const v = e1rm(s.weight, s.reps);
+        if (!r.best || v > r.best.v) r.best = { v, date: w.date };
+      }
+      m.set(e.name, r);
+    }
+    return [...m.values()].sort((a, b) => b.sessions - a.sessions);
+  }
+  function exerciseNames() { return records().map((r) => r.name); }
+
+  // ---------- tabs ----------
+  const tabs = ['log', 'history', 'records', 'claude'];
+  function showTab(name) {
+    if (!tabs.includes(name)) name = 'log';
+    document.querySelectorAll('nav.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    tabs.forEach((t) => { $(`#tab-${t}`).hidden = t !== name; });
+    try { localStorage.setItem('tab', name); } catch {}
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('nav.tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // ---------- form ----------
+  function setRow(weight = '', reps = '') {
+    const row = document.createElement('div');
+    row.className = 'set';
+    row.innerHTML = `<span class="n"></span>
+      <input type="number" class="w" step="0.25" min="0" inputmode="decimal" placeholder="kg" aria-label="重量 kg" value="${esc(weight)}">
+      <span class="x">×</span>
+      <input type="number" class="r" step="1" min="1" inputmode="numeric" placeholder="回" aria-label="回数" value="${esc(reps)}">
+      <button type="button" class="ghost danger" aria-label="このセットを削除">✕</button>`;
+    row.querySelector('button').onclick = () => {
+      const box = row.parentElement;
+      if (box.children.length > 1) { row.remove(); renumber(box); }
+      else { row.querySelector('.w').value = ''; row.querySelector('.r').value = ''; }
+    };
+    return row;
+  }
+  function renumber(box) { [...box.children].forEach((r, i) => { r.querySelector('.n').textContent = i + 1; }); }
+
+  function addExercise(ex = null, focus = true) {
+    const el = document.createElement('div');
+    el.className = 'ex';
+    el.innerHTML = `<div class="ex-head"><div><label>種目</label>
+        <input class="name" list="ex-names" placeholder="例: ベンチプレス" value="${esc(ex?.name || '')}"></div>
+        <button type="button" class="ghost danger rm">削除</button></div>
+      <div class="set-labels"><span></span><span>重量 kg</span><span></span><span>回数</span><span></span></div>
+      <div class="sets"></div>
+      <div class="row"><button type="button" class="btn add-set">＋ セット</button></div>`;
+    const box = el.querySelector('.sets');
+    const sets = ex?.sets?.length ? ex.sets : [{ weight: '', reps: '' }];
+    sets.forEach((s) => box.append(setRow(s.weight, s.reps)));
+    renumber(box);
+    el.querySelector('.add-set').onclick = () => {
+      const last = box.lastElementChild;
+      box.append(setRow(last?.querySelector('.w').value, last?.querySelector('.r').value));
+      renumber(box);
+    };
+    el.querySelector('.rm').onclick = () => {
+      if ($('#f-exercises').children.length > 1) el.remove();
+      else { el.remove(); addExercise(null, false); }
+    };
+    $('#f-exercises').append(el);
+    if (focus) el.querySelector('.name').focus();
+  }
+
+  function fillForm(w, { banner = '', bannerClass = '' } = {}) {
+    $('#f-date').value = w.date || today();
+    $('#f-title').value = w.title || '';
+    $('#f-notes').value = w.notes || '';
+    $('#f-exercises').innerHTML = '';
+    (w.exercises?.length ? w.exercises : [null]).forEach((ex) => addExercise(ex, false));
+    const b = $('#form-banner');
+    b.hidden = !banner; b.textContent = banner; b.className = `banner ${bannerClass}`;
+  }
+  function resetForm() {
+    S.editingId = null; S.source = 'app';
+    fillForm({ date: today() });
+    $('#form-save').textContent = '保存';
+  }
+  function readForm() {
+    return {
+      date: $('#f-date').value, title: $('#f-title').value, notes: $('#f-notes').value,
+      exercises: [...document.querySelectorAll('#f-exercises .ex')].map((ex) => ({
+        name: ex.querySelector('.name').value,
+        sets: [...ex.querySelectorAll('.set')].filter((s) => s.querySelector('.r').value)
+          .map((s) => ({ weight: s.querySelector('.w').value, reps: s.querySelector('.r').value })),
+      })),
+    };
+  }
+
+  $('#add-ex').onclick = () => addExercise();
+  $('#form-reset').onclick = resetForm;
+  $('#form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!S.db) return toast('保存先に接続できていません。claude.ai で開いてください');
+    let data;
+    try { data = validate(readForm()); } catch (err) { return toast(err.message); }
+    const btn = $('#form-save'); btn.disabled = true;
+    try {
+      if (S.editingId) {
+        const { id, ...prev } = S.workouts.find((w) => w.id === S.editingId) || {};
+        await S.db.collection('workouts').doc(S.editingId).set({ ...prev, ...data, updatedAt: new Date().toISOString() });
+        toast('更新しました');
+      } else {
+        await S.db.collection('workouts').add({ ...data, source: S.source, createdAt: new Date().toISOString() });
+        toast('保存しました');
+      }
+      resetForm();
+      $('#quick-text').value = '';
+    } catch (err) {
+      toast(err?.code === 'quota_exceeded' ? '保存容量の上限です。古い記録を削除してください' : '保存できませんでした。もう一度お試しください');
+    } finally { btn.disabled = false; }
+  });
+
+  // ---------- quick entry via Claude ----------
+  $('#quick-btn').onclick = async () => {
+    const text = $('#quick-text').value.trim();
+    if (!text) return toast('トレーニング内容を入力してください');
+    const btn = $('#quick-btn'); btn.disabled = true; btn.textContent = '読み取り中…';
+    const prompt = `あなたは筋トレ記録の入力アシスタントです。ユーザーの文章からトレーニング内容を抽出し、JSON だけを返してください。
+
+形式:
+{"date": "YYYY-MM-DD", "title": "", "notes": "", "exercises": [{"name": "種目名", "sets": [{"weight": 重量kg(数値), "reps": 回数(整数)}]}]}
+
+ルール:
+- 今日は ${today()}（${['日','月','火','水','木','金','土'][new Date().getDay()]}曜日）。日付の言及がなければ今日。「昨日」などは日付に変換する。
+- 「80kg×8を3セット」「80kg 8回 3セット」は同じセットを 3 つ並べる。「×10,10,9」は回数ごとに 1 セットずつ。
+- 自重種目は weight 0。加重は加えた重量。ポンド(lb)は kg に換算し小数 1 桁。
+- 種目名は正式な日本語名にする（例: ベンチ → ベンチプレス、DB → ダンベル）。既存の種目名と同じものは表記を合わせる: ${JSON.stringify(exerciseNames().slice(0, 60))}
+- 部位名や「胸の日」などがあれば title に、体調や感想は notes に入れる。
+- トレーニング内容が読み取れなければ {"exercises": []} を返す。
+
+文章:
+"""
+${text}
+"""`;
+    try {
+      const out = await S.sample.json(prompt, { modelTier: 'quick', cache: false });
+      if (!out || !Array.isArray(out.exercises) || !out.exercises.length) {
+        toast('トレーニング内容を読み取れませんでした。種目・重量・回数を書いてみてください');
+        return;
+      }
+      S.editingId = null; S.source = 'claude';
+      fillForm(out, { banner: 'Claude が読み取りました。内容を確認して「保存」を押してください。' });
+      $('#form-save').textContent = '保存';
+      $('#form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      if (err?.code === 'not_granted' || err?.code === 'sampling_disabled') { $('#quick').hidden = true; toast('Claude の利用が許可されませんでした。フォームから入力してください'); }
+      else if (err?.code === 'rate_limited') toast('少し時間をおいてからもう一度お試しください');
+      else toast('読み取りに失敗しました。もう一度お試しください');
+    } finally { btn.disabled = false; btn.textContent = 'Claude で読み取る'; }
+  };
+
+  // ---------- history ----------
+  function renderStats() {
+    const since = daysAgo(29);
+    const recent = S.workouts.filter((w) => w.date >= since);
+    const days = new Set(recent.map((w) => w.date)).size;
+    const sets = recent.reduce((s, w) => s + w.exercises.reduce((a, e) => a + e.sets.length, 0), 0);
+    const vol = recent.reduce((s, w) => s + volume(w), 0);
+    $('#stats').innerHTML = [
+      ['30日のトレ日数', days, '日'], ['30日のセット数', sets, ''],
+      ['30日のボリューム', vol >= 10000 ? (vol / 1000).toFixed(1) : vol.toLocaleString(), vol >= 10000 ? 't' : 'kg'],
+    ].map(([k, v, u]) => `<div class="stat"><div class="k">${k}</div><div class="v">${esc(v)}<small>${u}</small></div></div>`).join('');
+  }
+
+  function renderHistory() {
+    const q = $('#filter').value.trim().toLowerCase();
+    const list = sorted().filter((w) => !q || w.exercises.some((e) => e.name.toLowerCase().includes(q)));
+    if (!S.loaded) { $('#history').innerHTML = '<div class="empty">読み込み中…</div>'; return; }
+    if (!list.length) {
+      $('#history').innerHTML = q
+        ? '<div class="empty">該当する記録はありません。</div>'
+        : '<div class="empty"><b>まだ記録がありません</b>「記録」タブから最初のトレーニングを入力しましょう。</div>';
+      return;
+    }
+    $('#history').innerHTML = list.map((w) => `<article class="wk">
+      <div class="wk-head">
+        <div><span class="wk-date">${esc(w.date.replace(/-/g, '.'))}</span><span class="wk-title">${esc(w.title)}</span>
+          <span class="badge ${w.source === 'claude' ? 'claude' : ''}">${w.source === 'claude' ? 'Claude' : 'アプリ'}</span></div>
+        <div class="row" style="gap:0; flex-wrap:nowrap">
+          <button class="ghost" data-edit="${esc(w.id)}">編集</button>
+          <button class="ghost danger" data-del="${esc(w.id)}">削除</button>
+        </div>
+      </div>
+      <ul>${w.exercises.map((e) => `<li><b>${esc(e.name)}</b><span class="sets">${esc(fmtSets(e.sets))}</span></li>`).join('')}</ul>
+      ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
+      <div class="meta"><span>${w.exercises.length} 種目・${w.exercises.reduce((a, e) => a + e.sets.length, 0)} セット</span><span>ボリューム ${volume(w).toLocaleString()} kg</span></div>
+    </article>`).join('');
+  }
+  $('#filter').addEventListener('input', renderHistory);
+  $('#history').addEventListener('click', async (e) => {
+    const editId = e.target.dataset.edit, delId = e.target.dataset.del;
+    if (editId) {
+      const w = S.workouts.find((x) => x.id === editId); if (!w) return;
+      S.editingId = editId; S.source = w.source || 'app';
+      fillForm(w, { banner: `${w.date} の記録を編集中`, bannerClass: 'edit' });
+      $('#form-save').textContent = '更新';
+      showTab('log');
+    }
+    if (delId) {
+      const b = e.target;
+      if (!b.classList.contains('armed')) {
+        b.classList.add('armed'); b.textContent = 'もう一度押して削除';
+        setTimeout(() => { b.classList.remove('armed'); b.textContent = '削除'; }, 3000);
+        return;
+      }
+      try { await S.db.collection('workouts').doc(delId).delete(); toast('削除しました'); }
+      catch { toast('削除できませんでした'); }
+    }
+  });
+
+  // ---------- records ----------
+  function renderRecords() {
+    const rs = records();
+    $('#records').innerHTML = rs.length ? rs.map((r) => `<tr>
+      <td>${esc(r.name)}</td>
+      <td class="num"><span class="big">${r.max.weight || '自重'}</span>${r.max.weight ? 'kg' : ''}×${r.max.reps}<span class="sub">${esc(r.max.date)}</span></td>
+      <td class="num"><span class="big">${r.best.v || '—'}</span>${r.best.v ? 'kg' : ''}<span class="sub">${esc(r.best.date)}</span></td>
+      <td class="num">${r.sessions}</td></tr>`).join('')
+      : `<tr><td colspan="4"><div class="empty">${S.loaded ? '記録すると種目ごとの自己ベストがここに並びます。' : '読み込み中…'}</div></td></tr>`;
+  }
+
+  // ---------- Claude tab ----------
+  function renderExport() {
+    const days = Number($('#export-days').value);
+    const list = sorted().filter((w) => w.date >= daysAgo(days - 1));
+    const label = days >= 3650 ? 'すべての期間' : `直近 ${days} 日間`;
+    $('#export').textContent = `以下は私の${label}の筋トレ記録です。内容を把握して、振り返りと次回のメニュー提案をしてください。\n\n${toMarkdown(list)}`;
+  }
+  $('#export-days').onchange = renderExport;
+  $('#copy').onclick = async () => {
+    try { await navigator.clipboard.writeText($('#export').textContent); toast('コピーしました。Claude に貼り付けてください'); }
+    catch {
+      const r = document.createRange(); r.selectNodeContents($('#export'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      toast('テキストを選択しました。コピーしてください');
+    }
+  };
+
+  async function ask(question) {
+    if (!question.trim()) return toast('質問を入力してください');
+    if (!S.workouts.length) return toast('まず記録を追加してください');
+    S.askAbort?.abort();
+    const ctrl = new AbortController(); S.askAbort = ctrl;
+    const out = $('#answer'); out.hidden = false; out.classList.add('thinking'); out.textContent = '考え中…（最大 1 分ほどかかります）';
+    $('#ask-btn').disabled = true; $('#ask-stop').hidden = false;
+    const recs = records().slice(0, 30).map((r) => `- ${r.name}: 最大 ${r.max.weight}kg×${r.max.reps}（${r.max.date}）/ 推定1RM ${r.best.v}kg / ${r.sessions}回実施`).join('\n');
+    const prompt = `あなたは経験豊富なパーソナルトレーナーです。以下のユーザーの筋トレ記録をもとに、日本語で具体的に答えてください。
+数字（重量・回数・セット数）を使い、箇条書き中心で簡潔に。Markdown の見出し記号（#）や太字記号（**）は使わず、プレーンテキストで書いてください。
+怪我や痛みの話題では無理をさせず、医療機関の受診をすすめてください。
+
+今日: ${today()}
+
+## 自己ベスト
+${recs}
+
+## 直近 60 日の記録
+${toMarkdown(sorted().filter((w) => w.date >= daysAgo(59)).slice(0, 80))}
+
+## 質問
+${question}`;
+    try {
+      const res = await S.sample(prompt, {
+        signal: ctrl.signal, cache: false,
+        onText: ({ text }) => { out.classList.remove('thinking'); out.textContent = text; },
+      });
+      out.classList.remove('thinking'); out.textContent = res.text;
+    } catch (err) {
+      out.classList.remove('thinking');
+      if (err?.code === 'cancelled') { out.textContent = err.text || '停止しました。'; }
+      else if (err?.code === 'not_granted' || err?.code === 'sampling_disabled') { $('#ask-panel').hidden = true; toast('Claude の利用が許可されませんでした'); }
+      else if (err?.code === 'rate_limited') out.textContent = (err.text ? err.text + '\n\n' : '') + '混み合っています。少し時間をおいて質問してください。';
+      else out.textContent = (err?.text ? err.text + '\n\n' : '') + '回答を取得できませんでした。もう一度お試しください。';
+    } finally {
+      $('#ask-btn').disabled = false; $('#ask-stop').hidden = true;
+      if (S.askAbort === ctrl) S.askAbort = null;
+    }
+  }
+  document.querySelectorAll('[data-ask]').forEach((b) => b.addEventListener('click', () => ask(b.dataset.ask)));
+  $('#ask-btn').onclick = () => ask($('#ask-text').value);
+  $('#ask-stop').onclick = () => S.askAbort?.abort();
+
+  // ---------- render all ----------
+  function renderAll() {
+    $('#ex-names').innerHTML = exerciseNames().map((n) => `<option value="${esc(n)}">`).join('');
+    renderStats(); renderHistory(); renderRecords(); renderExport();
+  }
+
+  // ---------- boot ----------
+  resetForm();
+  renderAll();
+  let initial = 'log';
+  try { initial = localStorage.getItem('tab') || 'log'; } catch {}
+  showTab(initial);
+
+  if (!window.claude?.use) {
+    $('#status').textContent = 'オフライン表示（保存できません）'; $('#status').classList.add('err');
+    return;
+  }
+  claude.use('db').then((db) => {
+    if (!db) {
+      $('#status').textContent = 'サインインすると記録を保存できます'; $('#status').classList.add('err');
+      S.loaded = true; renderAll(); return;
+    }
+    S.db = db;
+    db.collection('workouts').onSnapshot((snap) => {
+      S.workouts = snap.docs.map((d) => {
+        const x = d.data() || {};
+        return { ...x, id: d.id, date: String(x.date || ''), exercises: Array.isArray(x.exercises) ? x.exercises : [] };
+      }).filter((w) => w.date);
+      S.loaded = true;
+      $('#status').textContent = `同期済み・${S.workouts.length} 件`; $('#status').classList.remove('err');
+      renderAll();
+    }, () => {
+      $('#status').textContent = '同期が切れました。ページを再読み込みしてください'; $('#status').classList.add('err');
+    });
+  });
+  claude.use('sample').then((sample) => {
+    if (!sample) return;
+    S.sample = sample;
+    $('#quick').hidden = false;
+    $('#ask-panel').hidden = false;
+  });
+})();
+</script>
