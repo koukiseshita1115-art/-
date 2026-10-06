@@ -1,0 +1,22 @@
+{
+  "name": "workout-log",
+  "version": "1.0.0",
+  "description": "筋トレ記録アプリ（Web UI + Claude 連携用 MCP サーバー）",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "workout-log-mcp": "src/mcp.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "mcp": "node src/mcp.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.5"
+  }
+}
