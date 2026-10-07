@@ -48,11 +48,12 @@
   .wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 104px; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  html { scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 4px 12px; margin-bottom: 16px; flex-wrap: wrap; }
   h1 { font: 700 30px/1 var(--font-display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
-  h1 small { font: 500 13px var(--font-body); color: var(--muted); letter-spacing: 0; text-transform: none; margin-left: 6px; }
+  h1 small { font: 500 13px var(--font-body); color: var(--muted); letter-spacing: 0; text-transform: none; margin-left: 6px; white-space: nowrap; }
   h2 { font: 600 20px/1.2 var(--font-display); letter-spacing: .04em; text-transform: uppercase; margin: 0; text-wrap: balance; }
-  .status { font-size: 12px; color: var(--muted); text-align: right; }
+  .status { font-size: 12px; color: var(--muted); white-space: nowrap; }
   .status.err { color: var(--danger); }
 
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
@@ -64,9 +65,9 @@
     background: var(--bg); color: var(--fg); font: inherit; font-size: 16px; min-width: 0;
   }
   textarea { min-height: 72px; resize: vertical; }
-  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, .chart svg:focus-visible, label.btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, .chart svg:focus-visible, label.btn:has(input:focus-visible), label.icon-btn:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .gridauto { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 12px; }
+  .gridauto { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   @media (max-width: 420px) { .grid2.collapse { grid-template-columns: 1fr; } }
 
   button { font: inherit; cursor: pointer; }
@@ -76,7 +77,7 @@
   .btn.claude { background: var(--claude-soft); border-color: transparent; color: var(--claude); font-weight: 700; }
   .btn:disabled { opacity: .55; cursor: default; }
   .btn svg { width: 18px; height: 18px; flex: none; }
-  .ghost { background: none; border: none; color: var(--muted); padding: 6px 8px; border-radius: 6px; font-size: 13px; }
+  .ghost { background: none; border: none; color: var(--muted); padding: 6px 8px; border-radius: 6px; font-size: 13px; white-space: nowrap; }
   .ghost:hover { color: var(--fg); background: var(--bg); }
   .ghost.danger:hover, .ghost.armed { color: var(--danger); }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -98,12 +99,13 @@
   .ex { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
   .ex-head { display: flex; gap: 8px; align-items: end; }
   .ex-head > div { flex: 1; min-width: 0; }
-  .set, .set-labels { display: grid; grid-template-columns: 32px 1fr 14px 1fr 32px; gap: 6px; align-items: center; }
+  .set, .set-labels { display: grid; grid-template-columns: 24px minmax(0, 1fr) 12px minmax(0, 1fr) 32px; gap: 4px; align-items: center; }
   .set .n { font: 600 18px var(--font-display); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
   .set .x { color: var(--muted); text-align: center; }
-  .set input { text-align: right; font-variant-numeric: tabular-nums; }
+  .set input, .nums input { text-align: right; font-variant-numeric: tabular-nums; padding-left: 6px; padding-right: 8px; -moz-appearance: textfield; }
+  .set input::-webkit-inner-spin-button, .set input::-webkit-outer-spin-button, .nums input::-webkit-inner-spin-button, .nums input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .set-labels { font-size: 11px; color: var(--muted); }
-  .set-labels span:nth-child(2), .set-labels span:nth-child(4) { text-align: right; padding-right: 12px; }
+  .set-labels span:nth-child(2), .set-labels span:nth-child(4) { text-align: right; padding-right: 8px; }
 
   .banner { border-radius: 8px; padding: 10px 12px; font-size: 13px; background: var(--claude-soft); color: var(--claude); }
   .banner.edit { background: var(--accent-soft); color: var(--accent); }
@@ -118,6 +120,8 @@
   /* workout history */
   .wk { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
   .wk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .wk-head > div:first-child, .meal-head > .meal-type { flex: 1; min-width: 0; }
+  .wk-head > .row, .meal-head > .row { flex: none; }
   .wk-date { font: 700 20px var(--font-display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
   .wk-title { font-weight: 500; margin-left: 6px; }
   .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; white-space: nowrap; }
@@ -145,6 +149,7 @@
   .daynav { display: grid; grid-template-columns: 44px 1fr 44px auto; align-items: center; gap: 4px; }
   .daynav .day { text-align: center; font: 700 22px var(--font-display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
   .daynav .day small { font: 500 13px var(--font-body); color: var(--muted); margin-left: 4px; }
+  label.btn, label.icon-btn { position: relative; }
   .icon-btn { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); margin: 0; cursor: pointer; }
   .icon-btn svg { width: 20px; height: 20px; }
   .icon-btn:disabled { opacity: .4; cursor: default; }
@@ -177,7 +182,7 @@
   .item-head input { flex: 1; }
   .nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .nums label { margin: 0; font-size: 11px; }
-  .nums input { text-align: right; padding: 8px; font-variant-numeric: tabular-nums; }
+  @media (max-width: 359px) { .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .totals { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .totals b { color: var(--fg); font-size: 18px; }
 
@@ -211,6 +216,8 @@
   .calc dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
   .wlist { list-style: none; margin: 0; padding: 0; }
   .wlist li { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; font-size: 14px; }
+  .wlist li > span:first-child { white-space: nowrap; }
+  .wlist li.more { display: block; text-align: center; border-bottom: none; }
   .wlist .d { color: var(--muted); font-size: 12px; text-align: right; min-width: 4.5em; }
 
   /* chat */
@@ -231,7 +238,9 @@
   .chip { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--fg); font-size: 14px; }
   .chip:hover { border-color: var(--claude); }
   .composer { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; display: grid; gap: 8px; box-shadow: 0 -4px 20px rgb(0 0 0 / .06); }
-  .composer-row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: end; }
+  .composer-row { display: flex; gap: 8px; align-items: flex-end; }
+  .composer-row textarea { flex: 1 1 auto; min-width: 0; }
+  .composer-row .btn { white-space: nowrap; }
   .composer textarea { min-height: 44px; max-height: 140px; resize: none; padding: 10px 12px; }
   .composer .icon-btn { border: none; background: var(--claude-soft); color: var(--claude); }
   .chat-photo { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
@@ -248,7 +257,7 @@
   }
   nav.tabs button { background: none; border: none; color: var(--muted); padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 500; display: grid; justify-items: center; gap: 2px; }
   nav.tabs button svg { width: 22px; height: 22px; }
-  nav.tabs button[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+  nav.tabs button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
 
   #toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; max-width: calc(100% - 32px); }
   #toast.show { opacity: 1; }
@@ -264,12 +273,12 @@
   <!-- ===================== 筋トレ ===================== -->
   <section id="tab-train" class="stack">
     <div class="seg" role="tablist" id="train-seg" aria-label="筋トレの表示切り替え">
-      <button type="button" role="tab" data-sub="log" aria-selected="true">記録する</button>
-      <button type="button" role="tab" data-sub="history" aria-selected="false">履歴</button>
-      <button type="button" role="tab" data-sub="records" aria-selected="false">自己ベスト</button>
+      <button type="button" role="tab" id="sub-log" data-sub="log" aria-controls="train-log" aria-selected="true">記録する</button>
+      <button type="button" role="tab" id="sub-history" data-sub="history" aria-controls="train-history" aria-selected="false" tabindex="-1">履歴</button>
+      <button type="button" role="tab" id="sub-records" data-sub="records" aria-controls="train-records" aria-selected="false" tabindex="-1">自己ベスト</button>
     </div>
 
-    <div id="train-log" class="stack">
+    <div id="train-log" class="stack" role="tabpanel" aria-labelledby="sub-log">
       <div class="panel quick" id="quick" hidden>
         <div>
           <label class="label" for="quick-text">話すように入力 → Claude が記録に変換</label>
@@ -296,13 +305,13 @@
       <datalist id="ex-names"></datalist>
     </div>
 
-    <div id="train-history" class="stack" hidden>
+    <div id="train-history" class="stack" role="tabpanel" aria-labelledby="sub-history" hidden>
       <div class="stats" id="stats"></div>
       <input id="filter" placeholder="種目で絞り込み（例: ベンチ）" aria-label="種目で絞り込み">
       <div id="history" class="stack"></div>
     </div>
 
-    <div id="train-records" class="stack" hidden>
+    <div id="train-records" class="stack" role="tabpanel" aria-labelledby="sub-records" hidden>
       <div class="panel">
         <h2>Personal Records</h2>
         <div class="table-wrap">
@@ -330,10 +339,10 @@
     <div class="panel" id="food-add">
       <h2>Add Meal</h2>
       <div class="row" id="food-buttons">
-        <label class="btn claude" id="photo-label" for="photo-input" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>写真を選ぶ
+        <label class="btn claude" id="photo-label" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>写真を選ぶ
+          <input type="file" id="photo-input" accept="image/*" class="vh">
         </label>
-        <input type="file" id="photo-input" accept="image/*" class="vh">
         <button type="button" class="btn" id="manual-btn">手入力</button>
       </div>
       <div class="photo-preview" id="photo-preview" hidden>
@@ -393,12 +402,12 @@
       <div class="grid2">
         <div><label for="p-height">身長 (cm)</label><input id="p-height" type="number" inputmode="decimal" min="100" max="250" step="0.1" placeholder="170"></div>
         <div><label for="p-weight">体重 (kg)</label><input id="p-weight" type="number" inputmode="decimal" min="25" max="300" step="0.1" placeholder="65"></div>
-        <div><label for="p-age">年齢</label><input id="p-age" type="number" inputmode="numeric" min="10" max="100" step="1" placeholder="30"></div>
+        <div><label for="p-age">年齢</label><input id="p-age" type="number" inputmode="numeric" min="18" max="100" step="1" placeholder="30"></div>
         <div><span class="label" id="p-sex-label">性別（計算用）</span>
           <div class="seg inset" role="radiogroup" aria-labelledby="p-sex-label">
             <label><input type="radio" name="p-sex" value="male" class="vh">男性</label>
             <label><input type="radio" name="p-sex" value="female" class="vh">女性</label>
-            <label><input type="radio" name="p-sex" value="other" class="vh">回答しない</label>
+            <label><input type="radio" name="p-sex" value="other" class="vh">その他</label>
           </div></div>
       </div>
       <div><label for="p-activity">普段の活動量</label>
@@ -437,8 +446,9 @@
       <button type="button" class="ghost" id="chat-clear">会話をクリア</button>
     </div>
     <div class="panel" id="chat-off" hidden>
-      <p style="margin:0">この画面では Claude を呼び出せません。claude.ai にサインインして開くと、Claude との会話や写真からの記録が使えます。</p>
+      <p style="margin:0" id="chat-off-text">この画面では Claude を呼び出せません。claude.ai にサインインして開くと、Claude との会話や写真からの記録が使えます。</p>
     </div>
+    <p class="hint" id="chat-pending" hidden>Claude を準備しています…</p>
     <div class="stack" id="chat-empty">
       <p class="hint" id="chat-intro">記録したいことをそのまま送ると、Claude が筋トレ・食事・体重を記録します。食事の写真も送れます。あなたの記録をもとに相談にも答えます。</p>
       <div class="chips">
@@ -447,15 +457,15 @@
         <button type="button" class="chip" data-prompt="体重の推移と食事の記録から、今のペースを評価して改善点を教えて">体重と食事から今のペースを評価して</button>
       </div>
     </div>
-    <div class="chat-log" id="chat-log" aria-live="polite"></div>
+    <div class="chat-log" id="chat-log"></div>
+    <div id="chat-status" class="vh" role="status"></div>
     <form class="composer" id="chat-form" novalidate>
       <div class="chat-photo" id="chat-photo" hidden><img id="chat-photo-img" alt="添付する写真"><span>写真を添付</span><button type="button" class="ghost danger" id="chat-photo-clear">外す</button></div>
       <div class="composer-row">
-        <label class="icon-btn" for="chat-file" id="chat-attach" title="写真を添付" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-          <span class="vh">写真を添付</span>
+        <label class="icon-btn" id="chat-attach" title="写真を添付" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <input type="file" id="chat-file" accept="image/*" class="vh" aria-label="写真を添付">
         </label>
-        <input type="file" id="chat-file" accept="image/*" class="vh">
         <textarea id="chat-input" rows="1" placeholder="例: ベンチ80kg×8を3セット、昼は牛丼並盛" aria-label="Claude へのメッセージ"></textarea>
         <div class="row" style="flex-wrap:nowrap; gap:6px">
           <button type="button" class="btn" id="chat-stop" hidden>停止</button>
@@ -478,15 +488,15 @@
   </section>
 </div>
 
-<nav class="tabs" role="tablist" aria-label="画面の切り替え">
-  <button type="button" role="tab" data-tab="train" aria-selected="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3M19 12h3M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/></svg>筋トレ</button>
-  <button type="button" role="tab" data-tab="food" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 21V3c-2 1.5-3 4-3 7s1 4 3 4"/></svg>食事</button>
-  <button type="button" role="tab" data-tab="body" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M5 9h14M12 9v6M12 15l-3 6M12 15l3 6"/></svg>からだ</button>
-  <button type="button" role="tab" data-tab="claude" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>Claude</button>
+<nav class="tabs" aria-label="画面の切り替え">
+  <button type="button" data-tab="train" aria-current="page">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3M19 12h3M5 8v8M19 8v8M8 6v12M16 6v12M8 12h8"/></svg>筋トレ</button>
+  <button type="button" data-tab="food" aria-current="false">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 21V3c-2 1.5-3 4-3 7s1 4 3 4"/></svg>食事</button>
+  <button type="button" data-tab="body" aria-current="false">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M5 9h14M12 9v6M12 15l-3 6M12 15l3 6"/></svg>からだ</button>
+  <button type="button" data-tab="claude" aria-current="false">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>Claude</button>
 </nav>
 <div id="toast" role="status"></div>
 
@@ -500,13 +510,14 @@
 
   const S = {
     db: null, sample: null, assets: null,
-    claudeOff: false, canImages: false, canTools: false, toolMax: 0, imageTypes: [], maxImageBytes: 0,
+    sampleState: 'pending', claudeOff: false, claudeOffReason: '', jsonOff: false,
+    canImages: false, canTools: false, toolMax: 0, imageTypes: [], maxImageBytes: 0, maxPromptBytes: 262144,
     workouts: [], meals: [], weights: [], profile: null,
     loaded: { workouts: false, meals: false, weights: false, profile: false },
     editingId: null, source: 'app',
     day: null, photo: null, foodAbort: null,
     mealDraft: null, editingMealId: null,
-    profileDirty: false,
+    profileDirty: false, profileWeightEdited: false, showAllWeights: false, dead: new Set(),
     chat: [], chatAbort: null, chatPhoto: null,
   };
 
@@ -528,6 +539,7 @@
   function weekday(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return WD[new Date(y, m - 1, d).getDay()]; }
   const md = (dateStr) => { const [, m, d] = dateStr.split('-'); return `${Number(m)}/${Number(d)}`; };
   const fmt = (n) => Math.round(Number(n) || 0).toLocaleString('ja-JP');
+  const kg = (n) => (Number(n) || 0).toFixed(1);
   const r1 = (n) => Math.round((Number(n) || 0) * 10) / 10;
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -538,7 +550,12 @@
     const p = 10 ** dec;
     return Math.round(n * p) / p;
   }
-  function validDate(s) { return typeof s === 'string' && DATE_RE.test(s) && !Number.isNaN(Date.parse(s)); }
+  function validDate(s) {
+    if (typeof s !== 'string' || !DATE_RE.test(s)) return false;
+    const [y, m, d] = s.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+  }
 
   // ======================================================== workouts
   const e1rm = (w, r) => (!w || !r) ? 0 : r === 1 ? w : Math.round(w * (1 + r / 30) * 10) / 10;
@@ -558,6 +575,7 @@
     input = input && typeof input === 'object' ? input : {};
     const date = input.date ? String(input.date) : today();
     if (!validDate(date)) throw new Error('日付は YYYY-MM-DD 形式で指定してください');
+    if (date > today()) throw new Error('未来の日付には記録できません');
     const exercises = (Array.isArray(input.exercises) ? input.exercises : []).map((ex) => ({
       name: String(ex?.name || '').trim().replace(/\s+/g, ' ').slice(0, 60),
       sets: (Array.isArray(ex?.sets) ? ex.sets : []).map((s) => ({ weight: clampNum(s?.weight, 0, 1000, 2), reps: Math.round(Number(s?.reps)) }))
@@ -573,15 +591,18 @@
 
   function records() {
     const m = new Map();
-    for (const w of S.workouts) for (const e of w.exercises) {
+    for (const w of S.workouts) {
+      const seen = new Set();
+      for (const e of w.exercises) {
       const r = m.get(e.name) || { name: e.name, sessions: 0, max: null, best: null };
-      r.sessions++;
+      if (!seen.has(e.name)) { seen.add(e.name); r.sessions++; }
       for (const s of e.sets) {
         if (!r.max || s.weight > r.max.weight || (s.weight === r.max.weight && s.reps > r.max.reps)) r.max = { ...s, date: w.date };
         const v = e1rm(s.weight, s.reps);
         if (!r.best || v > r.best.v) r.best = { v, date: w.date };
       }
       m.set(e.name, r);
+      }
     }
     return [...m.values()].filter((r) => r.max).sort((a, b) => b.sessions - a.sessions);
   }
@@ -617,9 +638,10 @@
     input = input && typeof input === 'object' ? input : {};
     const date = input.date ? String(input.date) : today();
     if (!validDate(date)) throw new Error('日付は YYYY-MM-DD 形式で指定してください');
+    if (date > today()) throw new Error('未来の日付には記録できません');
     let time = input.time ? String(input.time).slice(0, 5) : (date === today() ? nowHM() : '12:00');
     if (!TIME_RE.test(time)) time = '12:00';
-    const type = MEAL_TYPES[input.type] ? input.type : guessMealType(time);
+    const type = own(MEAL_TYPES, input.type) ? input.type : guessMealType(time);
     const items = (Array.isArray(input.items) ? input.items : []).map(cleanItem).filter((i) => i.name || i.kcal || i.protein || i.fat || i.carbs);
     if (!items.length) throw new Error('品目を 1 つ以上入力してください');
     items.forEach((i, n) => { if (!i.name) i.name = `品目${n + 1}`; });
@@ -646,7 +668,8 @@
     maintain: { label: '維持', kcalF: 1, pkg: 1.6, note: 'TDEE と同じ' },
     bulk: { label: '増量', kcalF: 1.1, pkg: 1.8, note: 'TDEE の 110%' },
   };
-  const SEX = { male: '男性', female: '女性', other: '回答しない' };
+  const SEX = { male: '男性', female: '女性', other: 'その他' };
+  const own = (obj, k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(obj, k)) ? obj[k] : undefined;
 
   function latestWeight() {
     let best = null;
@@ -667,19 +690,31 @@
     const p = S.profile; const lw = latestWeight();
     const h = Number(p?.height), a = Number(p?.age), w = Number(lw?.weight);
     if (!p || !(h > 0) || !(a > 0) || !(w > 0)) return null;
+    if (a < 18) return null;
+    const hm = h / 100;
+    const bmi = r1(w / (hm * hm));
     const base = 10 * w + 6.25 * h - 5 * a;
     const bmr = p.sex === 'female' ? base - 161 : p.sex === 'male' ? base + 5 : base - 78;
-    const act = ACTIVITY[p.activity] || ACTIVITY.moderate;
-    const goal = GOALS[p.goal] || GOALS.maintain;
+    const act = own(ACTIVITY, p.activity) || ACTIVITY.moderate;
+    let goal = own(GOALS, p.goal) || GOALS.maintain;
+    // No calorie deficit for an underweight BMI: show maintenance instead.
+    const cutBlocked = goal === GOALS.cut && bmi < 18.5;
+    if (cutBlocked) goal = GOALS.maintain;
     const tdee = bmr * act.f;
     let kcal = tdee * goal.kcalF, clamped = false;
-    if (kcal < bmr) { kcal = bmr; clamped = true; }
-    kcal = Math.round(kcal / 10) * 10;
-    const protein = Math.round(goal.pkg * w);
-    const fat = Math.round(kcal * 0.25 / 9);
+    // Never below BMR, and a deficit never below a basic floor (1,500 / 1,200 kcal) unless that exceeds maintenance.
+    const floor = Math.max(bmr, Math.min(tdee, p.sex === 'male' ? 1500 : 1200));
+    if (kcal < floor) { kcal = Math.ceil(floor / 10) * 10; clamped = true; }
+    else kcal = Math.round(kcal / 10) * 10;
+    // Protein per kg of body weight; with BMI over 25 use an adjusted weight (ideal + 25% of the excess), capped at 35% of energy.
+    const ibw = 22 * hm * hm;
+    const refW = bmi > 25 ? ibw + 0.25 * (w - ibw) : w;
+    let protein = Math.min(Math.round(goal.pkg * refW), Math.floor((kcal * 0.35) / 4));
+    let fat = Math.round((kcal * 0.25) / 9);
+    if (protein * 4 + fat * 9 > kcal) fat = Math.max(0, Math.floor((kcal - protein * 4) / 9));
     const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-    const bmi = r1(w / ((h / 100) ** 2));
-    return { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, protein, fat, carbs, bmi, weight: w, weightDate: lw.date, act, goal, clamped };
+    return { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, protein, fat, carbs, bmi, weight: w, weightDate: lw.date,
+      act, goal, clamped, cutBlocked, adjusted: refW !== w, refW: r1(refW) };
   }
 
   // ======================================================== tabs
@@ -688,7 +723,8 @@
   function showTab(name) {
     if (!TABS.includes(name)) name = 'train';
     currentTab = name;
-    $$('nav.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+    $$('nav.tabs button').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === name ? 'page' : 'false'));
+    document.documentElement.style.scrollPaddingBottom = name === 'claude' ? 'calc(260px + env(safe-area-inset-bottom, 0px))' : '';
     TABS.forEach((t) => { $(`#tab-${t}`).hidden = t !== name; });
     try { localStorage.setItem('wl-tab', name); } catch {}
     window.scrollTo(0, 0);
@@ -697,19 +733,35 @@
   }
   $$('nav.tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
+  const SUBS = ['log', 'history', 'records'];
   function showSub(name) {
-    $$('#train-seg button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.sub === name)));
-    ['log', 'history', 'records'].forEach((s) => { $(`#train-${s}`).hidden = s !== name; });
+    $$('#train-seg button').forEach((b) => {
+      const on = b.dataset.sub === name;
+      b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
+    });
+    SUBS.forEach((s) => { $(`#train-${s}`).hidden = s !== name; });
   }
   $$('#train-seg button').forEach((b) => b.addEventListener('click', () => showSub(b.dataset.sub)));
+  $('#train-seg').addEventListener('keydown', (e) => {
+    const i = SUBS.indexOf($('#train-seg button[aria-selected="true"]').dataset.sub);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: SUBS.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    const n = (next + SUBS.length) % SUBS.length;
+    showSub(SUBS[n]); $(`#sub-${SUBS[n]}`).focus();
+  });
 
   // ======================================================== Claude helpers
-  function sampleErrMsg(err) {
+  // method: 'json' (estimates/parsing) or 'sample' (chat). Per-call refusals only switch off what they concern.
+  function sampleErrMsg(err, method = 'sample') {
+    const off = (reason, msg) => { S.claudeOff = true; S.claudeOffReason = reason; applyClaudeAvailability(); return msg; };
     switch (err?.code) {
-      case 'not_granted': case 'sampling_disabled': case 'not_declared':
-      case 'capability_disabled': case 'capability_removed':
-        S.claudeOff = true; applyClaudeAvailability();
-        return 'Claude の利用が許可されていないため、この機能は使えません。';
+      case 'not_granted': return off('not_granted', 'Claude の利用が許可されませんでした。ページを開き直すと、もう一度確認されます。');
+      case 'sampling_disabled': case 'not_declared': case 'capability_disabled':
+        return off('disabled', 'このアカウントまたはこの画面では Claude を利用できません。手入力で記録できます。');
+      case 'capability_removed':
+        if (method === 'json') { S.jsonOff = true; applyClaudeAvailability(); return 'この画面では Claude による読み取りが使えません。手入力してください。'; }
+        return off('disabled', 'この画面では Claude を呼び出せません。手入力で記録できます。');
       case 'images_unavailable': S.canImages = false; applyClaudeAvailability(); return 'この画面では写真を送れません。文章で入力してください。';
       case 'tools_unavailable': S.canTools = false; applyClaudeAvailability(); return 'この画面では Claude からの自動記録が使えません。';
       case 'rate_limited': return '混み合っているか、利用上限に達しました。少し時間をおいてからもう一度お試しください。';
@@ -719,7 +771,7 @@
       case 'prompt_too_large': return '内容が長すぎます。短くしてもう一度お試しください。';
       case 'invalid_json': case 'empty_completion': return '読み取りに失敗しました。もう一度お試しください。';
       case 'local': return err.message;
-      default: return '通信に失敗しました。もう一度お試しください。';
+      default: return err && !err.code ? '読み取りに失敗しました。もう一度お試しください。' : '通信に失敗しました。もう一度お試しください。';
     }
   }
   function dbErrMsg(err) {
@@ -759,22 +811,35 @@
   const photoSrc = (id) => (id && PHOTO_ID.test(id)) ? `/_blob/${id}` : '';
   function deletePhoto(id) { if (id && S.assets) S.assets.delete(id).catch(() => {}); }
 
+  const canRecord = () => S.canTools && !!S.db;
   function applyClaudeAvailability() {
+    const pending = S.sampleState === 'pending';
     const on = !!S.sample && !S.claudeOff;
-    $('#quick').hidden = !on;
-    $('#photo-label').hidden = !(on && S.canImages);
-    $('#food-text-wrap').hidden = !on;
-    $('#food-est-row').hidden = !on;
-    $('#food-hint').textContent = on
-      ? (S.canImages ? '写真か食べたものの説明から Claude が栄養素を推定します。保存前に内容を確認・修正できます。' : '食べたものを書くと Claude が栄養素を推定します。保存前に内容を確認・修正できます。')
+    const jsonOn = on && !S.jsonOff && typeof S.sample?.json === 'function';
+    // A photo that can no longer be sent is dropped so retries fall back to text.
+    if (!(jsonOn && S.canImages) && S.photo) setFoodPhoto(null);
+    if (!(on && S.canImages) && S.chatPhoto) setChatPhoto(null);
+    $('#quick').hidden = !jsonOn;
+    $('#photo-label').hidden = !(jsonOn && S.canImages);
+    $('#food-text-wrap').hidden = !jsonOn;
+    $('#food-est-row').hidden = !jsonOn;
+    $('#food-hint').textContent = pending ? 'Claude を準備しています…'
+      : jsonOn ? (S.canImages ? '写真か食べたものの説明から Claude が栄養素を推定します。保存前に内容を確認・修正できます。' : '食べたものを書くと Claude が栄養素を推定します。保存前に内容を確認・修正できます。')
       : '「手入力」から食事を記録できます。';
-    $('#chat-off').hidden = on;
+    $('#chat-pending').hidden = !pending;
+    $('#chat-off').hidden = on || pending;
+    $('#chat-off-text').textContent = S.claudeOffReason === 'not_granted'
+      ? 'Claude の利用が許可されませんでした。ページを開き直すと、もう一度確認されます。各タブからの記録はそのまま使えます。'
+      : S.claudeOffReason === 'disabled'
+        ? 'このアカウントまたはこの画面では Claude を利用できません。各タブから手入力で記録できます。'
+        : 'この画面では Claude を呼び出せません。claude.ai にサインインして開くと、Claude との会話や写真からの記録が使えます。';
     $('#chat-form').hidden = !on;
     $('#chat-empty').hidden = !on || S.chat.length > 0;
     $('#chat-attach').hidden = !(on && S.canImages);
-    $('#chat-intro').textContent = S.canTools
+    $('#chat-intro').textContent = canRecord()
       ? '記録したいことをそのまま送ると、Claude が筋トレ・食事・体重を記録します。食事の写真も送れます。あなたの記録をもとに相談にも答えます。'
-      : 'あなたの記録をもとに Claude が相談に答えます（この画面では Claude からの自動記録は使えません）。';
+      : S.db ? 'あなたの記録をもとに Claude が相談に答えます（この画面では Claude からの自動記録は使えません）。'
+        : 'Claude に相談できます（サインインしていないため、記録の保存はできません）。';
   }
 
   // ======================================================== training form
@@ -804,7 +869,7 @@
       <div class="sets"></div>
       <div class="row"><button type="button" class="btn add-set">＋ セット</button></div>`;
     const box = el.querySelector('.sets');
-    const sets = ex?.sets?.length ? ex.sets : [{ weight: '', reps: '' }];
+    const sets = Array.isArray(ex?.sets) && ex.sets.length ? ex.sets : [{ weight: '', reps: '' }];
     sets.forEach((s) => box.append(setRow(s.weight, s.reps)));
     renumber(box);
     el.querySelector('.add-set').onclick = () => {
@@ -838,19 +903,35 @@
       date: $('#f-date').value, title: $('#f-title').value, notes: $('#f-notes').value,
       exercises: $$('#f-exercises .ex').map((ex) => ({
         name: ex.querySelector('.name').value,
-        sets: $$('.set', ex).filter((s) => s.querySelector('.r').value)
+        sets: $$('.set', ex).filter((s) => s.querySelector('.w').value !== '' || s.querySelector('.r').value !== '')
           .map((s) => ({ weight: s.querySelector('.w').value, reps: s.querySelector('.r').value })),
       })),
     };
   }
   $('#add-ex').onclick = () => addExercise();
   $('#form-reset').onclick = resetForm;
+  function checkSetRows() {
+    for (const ex of $$('#f-exercises .ex')) {
+      const name = ex.querySelector('.name').value.trim() || '種目';
+      const rows = $$('.set', ex);
+      for (let i = 0; i < rows.length; i++) {
+        const w = rows[i].querySelector('.w'), r = rows[i].querySelector('.r');
+        if (w.value !== '' && Number(w.value) < 0) { w.focus(); return `「${name}」${i + 1}セット目の重量は 0 以上で入力してください`; }
+        if (w.value !== '' && !(Number.isInteger(Number(r.value)) && Number(r.value) > 0)) { r.focus(); return `「${name}」${i + 1}セット目の回数を入力してください`; }
+      }
+    }
+    return '';
+  }
   $('#form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    checkDayRollover();
     if (!S.db) return toast('保存先に接続できていません。claude.ai で開いてください');
+    const rowErr = checkSetRows();
+    if (rowErr) return toast(rowErr);
     let data;
     try { data = validateWorkout(readForm()); } catch (err) { return toast(err.message); }
-    const btn = $('#form-save'); btn.disabled = true;
+    if (S.editingId && !S.workouts.some((w) => w.id === S.editingId)) { resetForm(); return toast('この記録はすでに削除されています'); }
+    const btn = $('#form-save'); if (btn.disabled) return; btn.disabled = true;
     try {
       if (S.editingId) {
         const { id, ...prev } = S.workouts.find((w) => w.id === S.editingId) || {};
@@ -889,16 +970,24 @@ ${text}
 """`;
     try {
       const out = await S.sample.json(prompt, { modelTier: 'quick', cache: false });
-      if (!out || !Array.isArray(out.exercises) || !out.exercises.length) {
+      const exs = (Array.isArray(out?.exercises) ? out.exercises : []).map((e) => ({
+        name: String(e?.name || '').trim().slice(0, 60),
+        sets: (Array.isArray(e?.sets) ? e.sets : []).filter((x) => x && typeof x === 'object')
+          .map((x) => ({ weight: Number.isFinite(Number(x.weight)) && Number(x.weight) >= 0 ? Number(x.weight) : '', reps: Math.round(Number(x.reps)) > 0 ? Math.round(Number(x.reps)) : '' }))
+          .filter((x) => x.reps),
+      })).filter((e) => e.name && e.sets.length);
+      if (!exs.length) {
         toast('トレーニング内容を読み取れませんでした。種目・重量・回数を書いてみてください');
         return;
       }
       S.editingId = null; S.source = 'claude';
-      fillForm(out, { banner: 'Claude が読み取りました。内容を確認して「保存」を押してください。' });
+      const d = validDate(out.date) && out.date <= today() ? out.date : today();
+      fillForm({ date: d, title: String(out.title || '').slice(0, 60), notes: String(out.notes || '').slice(0, 500), exercises: exs },
+        { banner: 'Claude が読み取りました。内容を確認して「保存」を押してください。' });
       $('#form-save').textContent = '保存';
       $('#form').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
-      if (err?.code !== 'cancelled') toast(sampleErrMsg(err));
+      if (err?.code !== 'cancelled') toast(sampleErrMsg(err, 'json'));
     } finally { btn.disabled = false; btn.textContent = 'Claude で読み取る'; }
   };
 
@@ -916,6 +1005,7 @@ ${text}
   }
   function renderHistory() {
     const q = $('#filter').value.trim().toLowerCase();
+    if (S.dead.has('workouts')) { $('#history').innerHTML = '<div class="empty">記録を読み込めませんでした。ページを再読み込みしてください。</div>'; return; }
     if (!S.loaded.workouts) { $('#history').innerHTML = '<div class="empty">読み込み中…</div>'; return; }
     const list = sortedWorkouts().filter((w) => !q || w.exercises.some((e) => e.name.toLowerCase().includes(q)));
     if (!list.length) {
@@ -929,8 +1019,8 @@ ${text}
         <div><span class="wk-date">${esc(w.date.replace(/-/g, '.'))}</span><span class="wk-title">${esc(w.title)}</span>
           <span class="badge ${w.source === 'claude' ? 'claude' : ''}">${w.source === 'claude' ? 'Claude' : 'アプリ'}</span></div>
         <div class="row" style="gap:0; flex-wrap:nowrap">
-          <button type="button" class="ghost" data-edit="${esc(w.id)}">編集</button>
-          <button type="button" class="ghost danger" data-del="${esc(w.id)}">削除</button>
+          <button type="button" class="ghost" data-edit="${esc(w.id)}" aria-label="${esc(w.date)} ${esc(w.title)} の記録を編集">編集</button>
+          <button type="button" class="ghost danger" data-del="${esc(w.id)}" aria-label="${esc(w.date)} ${esc(w.title)} の記録を削除">削除</button>
         </div>
       </div>
       <ul>${w.exercises.map((e) => `<li><b>${esc(e.name)}</b><span class="sets">${esc(fmtSets(e.sets))}</span></li>`).join('')}</ul>
@@ -940,11 +1030,22 @@ ${text}
   }
   $('#filter').addEventListener('input', renderHistory);
 
-  // two-step delete button helper (the viewer cannot show confirm())
+  // two-step delete button helper (the viewer cannot show confirm()).
+  // The second press must come at least 400ms later, so a double tap never deletes.
   function armDelete(btn) {
-    if (btn.classList.contains('armed')) return true;
-    btn.classList.add('armed'); btn.dataset.label = btn.textContent; btn.textContent = 'もう一度押して削除';
-    setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.textContent = btn.dataset.label; } }, 3000);
+    if (btn.classList.contains('armed')) return Date.now() - Number(btn.dataset.armedAt || 0) > 400;
+    const al = btn.getAttribute('aria-label');
+    btn.classList.add('armed'); btn.dataset.armedAt = String(Date.now());
+    btn.dataset.label = btn.textContent;
+    if (al !== null) btn.dataset.aria = al;
+    btn.textContent = '削除する？';
+    btn.setAttribute('aria-label', `もう一度押すと削除します${al ? '：' + al : ''}`);
+    toast('もう一度押すと削除します');
+    setTimeout(() => {
+      if (!btn.isConnected) return;
+      btn.classList.remove('armed'); btn.textContent = btn.dataset.label;
+      if (btn.dataset.aria !== undefined) btn.setAttribute('aria-label', btn.dataset.aria); else btn.removeAttribute('aria-label');
+    }, 3000);
     return false;
   }
 
@@ -961,8 +1062,12 @@ ${text}
     }
     if (delId) {
       if (!armDelete(t)) return;
-      try { await S.db.collection('workouts').doc(delId).delete(); toast('削除しました'); }
-      catch (err) { toast(dbErrMsg(err)); }
+      t.disabled = true;
+      try {
+        await S.db.collection('workouts').doc(delId).delete();
+        if (S.editingId === delId) resetForm();
+        toast('削除しました');
+      } catch (err) { toast(dbErrMsg(err)); } finally { t.disabled = false; }
     }
   });
 
@@ -983,9 +1088,13 @@ ${text}
     S.day = d;
     renderFood();
   }
+  const keepNavFocus = () => {
+    const a = document.activeElement;
+    if (!a || a === document.body || a.disabled || a.hidden) $('#day-prev').focus();
+  };
   $('#day-prev').onclick = () => setDay(addDays(S.day, -1));
-  $('#day-next').onclick = () => setDay(addDays(S.day, 1));
-  $('#day-today').onclick = () => setDay(today());
+  $('#day-next').onclick = () => { setDay(addDays(S.day, 1)); keepNavFocus(); };
+  $('#day-today').onclick = () => { setDay(today()); keepNavFocus(); };
 
   function macroRow(key, label, val, target, color) {
     const pct = target ? Math.min(100, (val / target) * 100) : 0;
@@ -997,6 +1106,7 @@ ${text}
   }
   function renderFoodSummary() {
     const box = $('#food-summary');
+    if (S.dead.has('meals')) { box.innerHTML = '<div class="empty">食事の記録を読み込めませんでした。ページを再読み込みしてください。</div>'; return; }
     if (!S.loaded.meals) { box.innerHTML = '<div class="empty">読み込み中…</div>'; return; }
     const t = dayTotals(S.day), tg = computeTargets();
     let html = `<div class="panel-head"><h2>${S.day === today() ? 'Today' : 'Intake'}</h2><span class="hint">${t.count} 食</span></div>
@@ -1012,14 +1122,15 @@ ${text}
       ${macroRow('f', '脂質 F', t.fat, tg?.fat, '--f')}
       ${macroRow('c', '炭水化物 C', t.carbs, tg?.carbs, '--c')}
     </div>`;
-    if (!tg) html += `<p class="hint">「からだ」タブで身長・体重・年齢を入れると、1日の目標と残りが表示されます。 <button type="button" class="ghost" data-goto="body" style="color:var(--accent)">設定する</button></p>`;
+    const minor = Number(S.profile?.age) > 0 && Number(S.profile?.age) < 18;
+    if (!tg && !minor) html += `<p class="hint">「からだ」タブで身長・体重・年齢を入れると、1日の目標と残りが表示されます。 <button type="button" class="ghost" data-goto="body" style="color:var(--accent)">設定する</button></p>`;
     box.innerHTML = html;
   }
   $('#food-summary').addEventListener('click', (e) => { const b = e.target.closest('[data-goto]'); if (b) showTab(b.dataset.goto); });
 
   function renderMealList() {
     const box = $('#meal-list');
-    if (!S.loaded.meals) { box.innerHTML = ''; return; }
+    if (!S.loaded.meals || S.dead.has('meals')) { box.innerHTML = ''; return; }
     const list = mealsOn(S.day);
     if (!list.length) {
       box.innerHTML = `<div class="empty">${S.day === today() ? 'まだ今日の食事の記録がありません。写真や手入力で追加しましょう。' : 'この日の食事の記録はありません。'}</div>`;
@@ -1032,8 +1143,8 @@ ${text}
         <div style="min-width:0">
           <div class="meal-head"><span class="meal-type">${esc(MEAL_TYPES[m.type] || '')} ${esc(m.time)}${m.source === 'photo' || m.source === 'text' || m.source === 'claude' ? '<span class="badge claude">Claude 推定</span>' : ''}</span>
             <span class="row" style="gap:0; flex-wrap:nowrap">
-              <button type="button" class="ghost" data-medit="${esc(m.id)}">編集</button>
-              <button type="button" class="ghost danger" data-mdel="${esc(m.id)}">削除</button>
+              <button type="button" class="ghost" data-medit="${esc(m.id)}" aria-label="${esc(m.time)} ${esc(m.title)} を編集">編集</button>
+              <button type="button" class="ghost danger" data-mdel="${esc(m.id)}" aria-label="${esc(m.time)} ${esc(m.title)} を削除">削除</button>
             </span></div>
           <div class="meal-title">${esc(m.title)}</div>
           <div class="meal-kcal"><b>${fmt(m.kcal)}</b> kcal · P ${r1(m.protein)} · F ${r1(m.fat)} · C ${r1(m.carbs)} g</div>
@@ -1047,16 +1158,20 @@ ${text}
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.medit) {
       const m = S.meals.find((x) => x.id === b.dataset.medit); if (!m) return;
+      S.foodAbort?.abort();
       openMealForm({ ...m }, { editingId: m.id, banner: `${m.date} の食事を編集中`, bannerClass: 'edit' });
     }
     if (b.dataset.mdel) {
       if (!armDelete(b)) return;
-      const m = S.meals.find((x) => x.id === b.dataset.mdel);
+      const id = b.dataset.mdel;
+      const m = S.meals.find((x) => x.id === id);
+      b.disabled = true;
       try {
-        await S.db.collection('meals').doc(b.dataset.mdel).delete();
+        await S.db.collection('meals').doc(id).delete();
         if (m?.photoId) deletePhoto(m.photoId);
+        if (S.editingMealId === id) closeMealForm();
         toast('削除しました');
-      } catch (err) { toast(dbErrMsg(err)); }
+      } catch (err) { toast(dbErrMsg(err)); } finally { b.disabled = false; }
     }
   });
 
@@ -1092,10 +1207,13 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   }
 
   $('#food-estimate').onclick = async () => {
+    checkDayRollover();
     const text = $('#food-text').value.trim();
     const photo = S.photo;
     if (!photo && !text) return toast(S.canImages ? '写真を選ぶか、食べたものを入力してください' : '食べたものを入力してください');
-    if (!S.sample || S.claudeOff || S.foodAbort) return;
+    if (!S.sample || S.claudeOff || S.jsonOff || S.foodAbort) return;
+    // Fix the day and time now, so navigating while Claude works does not move the meal.
+    const day = S.day, time = day === today() ? nowHM() : '12:00';
     const ctrl = new AbortController(); S.foodAbort = ctrl;
     const btn = $('#food-estimate'); btn.disabled = true; btn.textContent = '推定中…（10〜40秒）';
     $('#food-stop').hidden = false;
@@ -1104,20 +1222,22 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (photo) opts.images = [await imageForClaude(photo.file)];
       if (ctrl.signal.aborted) return;
       const out = await S.sample.json(mealPrompt(text, !!photo), opts);
+      if (ctrl.signal.aborted) return;
+      if (photo && S.photo !== photo) { toast('写真が変更されたため、推定結果を破棄しました'); return; }
       const items = (Array.isArray(out?.items) ? out.items : []).map(cleanItem).filter((i) => i.name);
       if (!items.length) {
         toast(photo ? '写真から食事を読み取れませんでした。補足を書くか、手入力してください' : '食事の内容を読み取れませんでした。料理名と量を書いてみてください');
         return;
       }
-      const time = S.day === today() ? nowHM() : '12:00';
-      const conf = { high: '確度: 高', medium: '確度: 中', low: '確度: 低' }[out.confidence] || '';
+      const conf = own({ high: '確度: 高', medium: '確度: 中', low: '確度: 低' }, out.confidence) || '';
       openMealForm({
-        date: S.day, time, type: guessMealType(time), title: String(out.title || '').slice(0, 60), items,
+        date: day, time, type: guessMealType(time), title: String(out.title || '').slice(0, 60), items,
         note: [conf, String(out.note || '').slice(0, 200)].filter(Boolean).join('｜'),
-      }, { photoFile: photo?.file || null, photoUrl: photo?.url || null, source: photo ? 'photo' : 'text',
-           banner: 'Claude の推定です。量や数値を確認・修正してから「保存」を押してください。' });
+      }, { photoFile: photo?.file || null, source: photo ? 'photo' : 'text', sourceText: text,
+           banner: 'Claude の推定です。量や数値を確認・修正してから「保存」を押してください。'
+             + (photo && !S.assets ? '（この画面では写真は保存されません）' : '') });
     } catch (err) {
-      if (err?.code !== 'cancelled') toast(sampleErrMsg(err));
+      if (err?.code !== 'cancelled') toast(sampleErrMsg(err, 'json'));
     } finally {
       if (S.foodAbort === ctrl) S.foodAbort = null;
       btn.disabled = false; btn.textContent = 'Claude で推定';
@@ -1126,6 +1246,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   };
   $('#food-stop').onclick = () => S.foodAbort?.abort();
   $('#manual-btn').onclick = () => {
+    checkDayRollover();
+    S.foodAbort?.abort();
     const time = S.day === today() ? nowHM() : '12:00';
     openMealForm({ date: S.day, time, type: guessMealType(time), title: '', items: [{ name: '', amount: '', kcal: '', protein: '', fat: '', carbs: '' }] },
       { source: 'manual', focus: true });
@@ -1165,14 +1287,23 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   $('#m-items').addEventListener('input', updateMealTotals);
   $('#m-add-item').onclick = () => { const r = itemRow(); $('#m-items').append(r); $('.i-name', r).focus(); };
 
+  function discardDraftPhoto() {
+    const d = S.mealDraft; if (!d) return;
+    if (d.objUrl) URL.revokeObjectURL(d.objUrl);
+    // A photo uploaded by a failed save of this draft is removed when the draft is abandoned.
+    if (d.uploadedHere && d.photoId) deletePhoto(d.photoId);
+  }
   function openMealForm(m, opts = {}) {
+    discardDraftPhoto();
     S.editingMealId = opts.editingId || null;
     S.mealDraft = {
-      source: opts.source || m.source || 'manual', photoFile: opts.photoFile || null,
-      photoId: m.photoId || null, note: m.note || '', createdAt: m.createdAt || null,
+      source: opts.source || m.source || 'manual', photoFile: opts.photoFile || null, sourceText: opts.sourceText ?? null,
+      photoId: m.photoId || null, uploadedHere: false, note: m.note || '', createdAt: m.createdAt || null,
+      objUrl: opts.photoFile ? URL.createObjectURL(opts.photoFile) : null,
     };
     $('#m-title').value = m.title || '';
-    $('#m-type').value = MEAL_TYPES[m.type] ? m.type : 'snack';
+    $('#m-type').value = own(MEAL_TYPES, m.type) ? m.type : 'snack';
+    $('#m-date').max = today();
     $('#m-date').value = m.date || S.day;
     $('#m-time').value = m.time || '12:00';
     $('#m-items').innerHTML = '';
@@ -1180,7 +1311,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     updateMealTotals();
     const b = $('#meal-banner'); b.hidden = !opts.banner; b.textContent = opts.banner || ''; b.className = `banner ${opts.bannerClass || ''}`;
     const note = $('#m-note'); note.hidden = !m.note; note.textContent = m.note || '';
-    const photoUrl = opts.photoUrl || photoSrc(m.photoId);
+    const photoUrl = S.mealDraft.objUrl || photoSrc(m.photoId);
     $('#meal-photo').hidden = !photoUrl;
     if (photoUrl) $('#meal-photo-img').src = photoUrl; else $('#meal-photo-img').removeAttribute('src');
     $('#m-save').textContent = S.editingMealId ? '更新' : '保存';
@@ -1189,12 +1320,15 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     if (opts.focus) $('#m-title').focus({ preventScroll: true });
   }
   function closeMealForm() {
+    discardDraftPhoto();
     $('#meal-form').hidden = true;
+    $('#meal-photo-img').removeAttribute('src');
     S.mealDraft = null; S.editingMealId = null;
   }
   $('#m-cancel').onclick = closeMealForm;
   $('#meal-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    checkDayRollover();
     if (!S.db) return toast('保存先に接続できていません。claude.ai で開いてください');
     if (!S.mealDraft) return;
     let data;
@@ -1204,31 +1338,44 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         title: $('#m-title').value, items: readMealItems(), note: S.mealDraft.note,
       });
     } catch (err) { return toast(err.message); }
-    const btn = $('#m-save'); btn.disabled = true;
     const draft = S.mealDraft, editingId = S.editingMealId;
+    if (editingId && !S.meals.some((x) => x.id === editingId)) { closeMealForm(); return toast('この食事はすでに削除されています'); }
+    const btn = $('#m-save'); if (btn.disabled) return; btn.disabled = true;
     try {
-      let photoId = draft.photoId;
-      if (!photoId && draft.photoFile) photoId = await uploadPhoto(draft.photoFile);
-      const doc = { ...data, photoId: photoId || null, source: draft.source };
+      if (!draft.photoId && draft.photoFile) {
+        const id = await uploadPhoto(draft.photoFile);
+        if (id) { draft.photoId = id; draft.uploadedHere = true; }
+      }
+      const doc = { ...data, photoId: draft.photoId || null, source: draft.source };
       if (editingId) {
         const { id, ...prev } = S.meals.find((x) => x.id === editingId) || {};
         await S.db.collection('meals').doc(editingId).set({ ...prev, ...doc, updatedAt: new Date().toISOString() });
         toast('更新しました');
       } else {
         await S.db.collection('meals').add({ ...doc, createdAt: new Date().toISOString() });
-        toast(draft.photoFile && !photoId && S.assets ? '保存しました（写真は保存できませんでした）' : '保存しました');
-        if (draft.photoFile) setFoodPhoto(null);
-        $('#food-text').value = '';
+        toast(draft.photoFile && !draft.photoId
+          ? (S.assets ? '保存しました（写真は保存できませんでした）' : '保存しました（この画面では写真は保存されません）')
+          : '保存しました');
+        // Clear the inputs only if they still hold what this draft came from.
+        if (draft.photoFile && S.photo?.file === draft.photoFile) setFoodPhoto(null);
+        if (draft.sourceText != null && $('#food-text').value.trim() === draft.sourceText) $('#food-text').value = '';
       }
-      closeMealForm();
-      setDay(data.date);
-      $('#food-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      draft.uploadedHere = false;
+      if (S.mealDraft === draft) {
+        closeMealForm();
+        setDay(data.date);
+        $('#food-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (err) { toast(dbErrMsg(err)); } finally { btn.disabled = false; }
   });
 
   function renderFood() {
     if (!S.day) S.day = today();
-    $('#day-label').innerHTML = `${esc(S.day.replace(/-/g, '.'))}<small>（${weekday(S.day)}）${S.day === today() ? ' 今日' : ''}</small>`;
+    const key = `${S.day}|${today()}`;
+    if (S.dayLabelKey !== key) {
+      S.dayLabelKey = key;
+      $('#day-label').innerHTML = `${esc(S.day.replace(/-/g, '.'))}<small>（${weekday(S.day)}）${S.day === today() ? ' 今日' : ''}</small>`;
+    }
     $('#day-next').disabled = S.day >= today();
     $('#day-today').hidden = S.day === today();
     renderFoodSummary();
@@ -1264,6 +1411,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       hide() { tip.hidden = true; },
     };
   }
+  const HALO = { 'paint-order': 'stroke', stroke: 'var(--surface)', 'stroke-width': 3, 'stroke-linejoin': 'round' };
   function colPath(x, yTop, w, yBase) {
     const h = yBase - yTop; const r = Math.max(0, Math.min(4, w / 2, h));
     return `M${x},${yBase}V${yTop + r}Q${x},${yTop} ${x + r},${yTop}H${x + w - r}Q${x + w},${yTop} ${x + w},${yTop + r}V${yBase}Z`;
@@ -1300,9 +1448,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const lab = svgEl('text', { x: cx, y: H - 8, 'text-anchor': 'middle', class: d.date === S.day ? 'strong' : '' });
       lab.textContent = `${md(d.date)}`; svg.append(lab);
       if (d.date === S.day && d.kcal > 0) {
-        const v = svgEl('text', { x: cx, y: y(d.kcal) - 6, 'text-anchor': 'middle', class: 'strong' }); v.textContent = fmt(d.kcal); svg.append(v);
+        const v = svgEl('text', { x: cx, y: y(d.kcal) - 6, 'text-anchor': 'middle', class: 'strong', ...HALO }); v.textContent = fmt(d.kcal); svg.append(v);
       }
-      const hit = svgEl('rect', { x: L + slot * i, y: T, width: slot, height: ph + 4, class: 'hit', tabindex: 0, role: 'button',
+      const hit = svgEl('rect', { x: L + slot * i, y: T, width: slot, height: ph + 4, class: 'hit', tabindex: 0, role: 'button', 'data-date': d.date,
         'aria-label': `${md(d.date)}（${weekday(d.date)}） ${d.count ? fmt(d.kcal) + ' kcal' : '記録なし'}。この日を表示` });
       const show = () => tip.show(cx, y(Math.max(d.kcal, 0)), d.count ? `${fmt(d.kcal)} kcal` : '記録なし', `${md(d.date)}（${weekday(d.date)}）${target ? ` / 目標 ${fmt(target)}` : ''}`);
       hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show);
@@ -1312,11 +1460,17 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       svg.append(hit);
     });
     if (target) {
-      svg.append(svgEl('line', { x1: L, x2: W - R, y1: y(target), y2: y(target), stroke: 'var(--fg)', 'stroke-width': 1, opacity: 0.5 }));
-      const t = svgEl('text', { x: W - R, y: y(target) - 5, 'text-anchor': 'end' }); t.textContent = `目標 ${fmt(target)}`; svg.append(t);
+      svg.append(svgEl('line', { x1: L, x2: W - R, y1: y(target), y2: y(target), stroke: 'var(--fg)', 'stroke-width': 1, opacity: 0.5, 'pointer-events': 'none' }));
+      // The selected day is always the rightmost column; move the target label left when its value label would collide.
+      const sel = data[data.length - 1];
+      const clash = sel.kcal > 0 && Math.abs((y(sel.kcal) - 6) - (y(target) - 5)) < 16;
+      const t = svgEl('text', { x: clash ? L + 4 : W - R, y: y(target) - 5, 'text-anchor': clash ? 'start' : 'end', 'pointer-events': 'none', ...HALO });
+      t.textContent = `目標 ${fmt(target)}`; svg.append(t);
     }
+    const hadFocus = !!document.activeElement?.closest?.('#kcal-chart rect.hit');
     box.querySelector('svg')?.remove();
     box.prepend(svg);
+    if (hadFocus) svg.querySelector(`rect.hit[data-date="${S.day}"]`)?.focus();
     box.querySelectorAll('.tip').forEach((el, i, all) => { if (i < all.length - 1) el.remove(); });
   }
 
@@ -1336,8 +1490,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const t0 = Date.parse(pts[0].date), t1 = Date.parse(pts[pts.length - 1].date), span = Math.max(1, t1 - t0);
     const xs = pts.map((p) => pts.length === 1 ? L + pw / 2 : L + ((Date.parse(p.date) - t0) / span) * pw);
     const y = (v) => T + ph - ((v - lo) / (hi - lo)) * ph;
-    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, tabindex: 0, role: 'img',
-      'aria-label': `体重の推移。直近 ${pts[pts.length - 1].weight}kg（${md(pts[pts.length - 1].date)}）。左右キーで各記録を確認できます` });
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, tabindex: 0, role: 'slider',
+      'aria-label': '体重の推移（左右キーで各記録を確認）', 'aria-valuemin': 0, 'aria-valuemax': pts.length - 1, 'aria-valuenow': pts.length - 1,
+      'aria-valuetext': `${kg(pts[pts.length - 1].weight)} kg ${md(pts[pts.length - 1].date)}` });
     for (let v = lo; v <= hi + 1e-9; v += step) {
       svg.append(svgEl('line', { x1: L, x2: L + pw, y1: y(v), y2: y(v), stroke: 'var(--grid)', 'stroke-width': 1 }));
       const t = svgEl('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end' }); t.textContent = v.toFixed(dec); svg.append(t);
@@ -1352,7 +1507,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     }
     const last = pts.length - 1;
     svg.append(svgEl('circle', { cx: xs[last], cy: y(pts[last].weight), r: 4, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2 }));
-    const endLab = svgEl('text', { x: xs[last] + 8, y: y(pts[last].weight) + 4, class: 'strong' }); endLab.textContent = `${pts[last].weight}kg`; svg.append(endLab);
+    const endLab = svgEl('text', { x: xs[last] + 8, y: y(pts[last].weight) + 4, class: 'strong' }); endLab.textContent = `${kg(pts[last].weight)}kg`; svg.append(endLab);
     const cross = svgEl('line', { y1: T, y2: T + ph, stroke: 'var(--muted)', 'stroke-width': 1, visibility: 'hidden' });
     const dot = svgEl('circle', { r: 5, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' });
     svg.append(cross, dot);
@@ -1367,7 +1522,10 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
       dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('visibility', 'visible');
       const prev = idx > 0 ? r1(p.weight - pts[idx - 1].weight) : null;
-      tip.show(cx * (box.clientWidth / W), cy, `${p.weight} kg`, `${md(p.date)}（${weekday(p.date)}）${prev !== null ? `　前回比 ${prev > 0 ? '+' : ''}${prev}` : ''}`);
+      const label = `${md(p.date)}（${weekday(p.date)}）${prev !== null ? `　前回比 ${prev > 0 ? '+' : ''}${prev.toFixed(1)}` : ''}`;
+      tip.show(cx * (box.clientWidth / W), cy, `${kg(p.weight)} kg`, label);
+      svg.setAttribute('aria-valuenow', idx);
+      svg.setAttribute('aria-valuetext', `${kg(p.weight)} kg ${label}`);
     };
     const hide = () => { cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); tip.hide(); };
     const nearest = (ev) => {
@@ -1396,35 +1554,38 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   function radioVal(name) { return $(`input[name="${name}"]:checked`)?.value || ''; }
   function setRadio(name, v) { $$(`input[name="${name}"]`).forEach((r) => { r.checked = r.value === v; }); }
   function fillProfileForm() {
+    // The weight field follows the latest logged weight unless the user typed in it.
+    if (!S.profileWeightEdited) $('#p-weight').value = latestWeight()?.weight ?? S.profile?.weight ?? '';
     if (S.profileDirty) return;
-    const p = S.profile || {}; const lw = latestWeight();
+    const p = S.profile || {};
     $('#p-height').value = p.height ?? '';
-    $('#p-weight').value = lw?.weight ?? p.weight ?? '';
     $('#p-age').value = p.age ?? '';
     setRadio('p-sex', p.sex || '');
-    $('#p-activity').value = ACTIVITY[p.activity] ? p.activity : 'moderate';
-    setRadio('p-goal', GOALS[p.goal] ? p.goal : 'maintain');
+    $('#p-activity').value = own(ACTIVITY, p.activity) ? p.activity : 'moderate';
+    setRadio('p-goal', own(GOALS, p.goal) ? p.goal : 'maintain');
   }
-  $('#profile-form').addEventListener('input', () => { S.profileDirty = true; });
-  $('#profile-form').addEventListener('change', () => { S.profileDirty = true; });
+  $('#profile-form').addEventListener('input', (e) => { if (e.target.id === 'p-weight') S.profileWeightEdited = true; else S.profileDirty = true; });
+  $('#profile-form').addEventListener('change', (e) => { if (e.target.id !== 'p-weight') S.profileDirty = true; });
   $('#profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    checkDayRollover();
     if (!S.db) return toast('保存先に接続できていません。claude.ai で開いてください');
     const height = Number($('#p-height').value), weight = Number($('#p-weight').value), age = Math.round(Number($('#p-age').value));
     const sex = radioVal('p-sex'), activity = $('#p-activity').value, goal = radioVal('p-goal') || 'maintain';
     if (!(height >= 100 && height <= 250)) return toast('身長は 100〜250 cm で入力してください');
     if (!(weight >= 25 && weight <= 300)) return toast('体重は 25〜300 kg で入力してください');
-    if (!(age >= 10 && age <= 100)) return toast('年齢は 10〜100 歳で入力してください');
-    if (!SEX[sex]) return toast('性別（計算用）を選んでください');
-    const btn = $('#p-save'); btn.disabled = true;
+    if (!(age >= 18 && age <= 100)) return toast('年齢は 18〜100 歳で入力してください（18 歳未満は目標を計算できません）');
+    if (!own(SEX, sex)) return toast('性別（計算用）を選んでください');
+    const btn = $('#p-save'); if (btn.disabled) return; btn.disabled = true;
+    // Decide before any write: our own write's snapshot can land before set() resolves.
+    const w = r1(weight);
+    let latest = null;
+    for (const x of S.weights) if (!latest || x.date > latest.date) latest = x;
+    const logWeight = !latest || latest.weight !== w;
     try {
-      const w = r1(weight);
       await S.db.doc('settings/profile').set({ height: r1(height), weight: w, age, sex, activity, goal, updatedAt: new Date().toISOString() });
-      const lw = latestWeight();
-      if (!lw || lw.weight !== w || (lw.date && lw.date !== today())) {
-        if (!lw || lw.weight !== w) await S.db.collection('weights').doc(today()).set({ date: today(), weight: w, createdAt: new Date().toISOString() });
-      }
-      S.profileDirty = false;
+      if (logWeight) await S.db.collection('weights').doc(today()).set({ date: today(), weight: w, createdAt: new Date().toISOString() });
+      S.profileDirty = false; S.profileWeightEdited = false;
       toast('保存しました。目標を計算しました');
       $('#targets').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) { toast(dbErrMsg(err)); } finally { btn.disabled = false; }
@@ -1433,57 +1594,72 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   function renderTargets() {
     const box = $('#targets');
     const tg = computeTargets();
+    if (S.dead.has('profile') || S.dead.has('weights')) { box.innerHTML = '<h2>Daily Target</h2><div class="empty">データを読み込めませんでした。ページを再読み込みしてください。</div>'; return; }
     if (!S.loaded.profile) { box.innerHTML = '<div class="empty">読み込み中…</div>'; return; }
+    if (S.profile && Number(S.profile.age) > 0 && Number(S.profile.age) < 18) {
+      box.innerHTML = `<h2>Daily Target</h2><div class="empty"><b>18 歳未満の方の目標は計算していません</b>成長期は必要な栄養が大人と異なります。食事量の目安は、学校の先生や医師・管理栄養士に相談してください。記録はそのまま使えます。</div>`;
+      return;
+    }
     if (!tg) {
       box.innerHTML = `<h2>Daily Target</h2><div class="empty"><b>1日の目標を計算しましょう</b>下のプロフィールに身長・体重・年齢・性別・活動量・目標を入れて「保存して計算」を押すと、1日に摂るべきカロリーと PFC が表示されます。</div>`;
       return;
     }
     const pk = tg.protein * 4, fk = tg.fat * 9, ck = tg.carbs * 4;
-    const pct = (k) => Math.round((k / tg.kcal) * 100);
-    const adj = tg.goal.kcalF === 1 ? '±0' : `${tg.goal.kcalF < 1 ? '−' : '+'}${fmt(Math.abs(tg.tdee * tg.goal.kcalF - tg.tdee))} kcal`;
+    // Shares of the macro total, rounded so the three always add up to 100%.
+    const tot = pk + fk + ck || 1;
+    const pP = Math.round((pk / tot) * 100), pF = Math.round((fk / tot) * 100), pC = ck ? 100 - pP - pF : 0;
+    const delta = tg.kcal - tg.tdee;
+    const adj = Math.abs(delta) < 5 ? '±0' : `${delta < 0 ? '−' : '+'}${fmt(Math.abs(delta))} kcal`;
+    const adjLabel = tg.clamped ? '下限に合わせて調整' : tg.goal.note;
+    const proteinBase = tg.adjusted ? `調整体重 ${tg.refW}kg（BMI 25 超のため）` : '体重';
     box.innerHTML = `<div class="panel-head"><h2>Daily Target</h2><span class="badge">${esc(tg.goal.label)}</span></div>
       <div class="hero"><span class="hero-v">${fmt(tg.kcal)}</span><span class="hero-u">kcal / 日</span></div>
+      ${tg.cutBlocked ? '<p class="hint" style="color:var(--danger)">! BMI が低体重（18.5 未満）のため、減量ではなく維持のカロリーを表示しています。体重を減らす前に医師に相談してください。</p>' : ''}
       <div class="pfc-tiles">
-        <div class="pfc-tile" style="--m: var(--p)"><span class="key"><i aria-hidden="true"></i>たんぱく質 P</span><b>${tg.protein}g</b><small>${fmt(pk)} kcal・${pct(pk)}%</small></div>
-        <div class="pfc-tile" style="--m: var(--f)"><span class="key"><i aria-hidden="true"></i>脂質 F</span><b>${tg.fat}g</b><small>${fmt(fk)} kcal・${pct(fk)}%</small></div>
-        <div class="pfc-tile" style="--m: var(--c)"><span class="key"><i aria-hidden="true"></i>炭水化物 C</span><b>${tg.carbs}g</b><small>${fmt(ck)} kcal・${pct(ck)}%</small></div>
+        <div class="pfc-tile" style="--m: var(--p)"><span class="key"><i aria-hidden="true"></i>たんぱく質</span><b>${tg.protein}g</b><small>${fmt(pk)} kcal・${pP}%</small></div>
+        <div class="pfc-tile" style="--m: var(--f)"><span class="key"><i aria-hidden="true"></i>脂質</span><b>${tg.fat}g</b><small>${fmt(fk)} kcal・${pF}%</small></div>
+        <div class="pfc-tile" style="--m: var(--c)"><span class="key"><i aria-hidden="true"></i>炭水化物</span><b>${tg.carbs}g</b><small>${fmt(ck)} kcal・${pC}%</small></div>
       </div>
       <dl class="calc">
         <dt>基礎代謝（BMR）</dt><dd>${fmt(tg.bmr)} kcal</dd>
         <dt>1日の消費（TDEE＝BMR × ${tg.act.f}）</dt><dd>${fmt(tg.tdee)} kcal</dd>
-        <dt>目標による調整（${esc(tg.goal.note)}）</dt><dd>${adj}</dd>
+        <dt>目標による調整（${esc(adjLabel)}）</dt><dd>${adj}</dd>
         <dt>BMI</dt><dd>${tg.bmi}（${bmiLabel(tg.bmi)}）</dd>
       </dl>
-      ${tg.clamped ? '<p class="hint">減量時も基礎代謝を下回らないよう、目標を基礎代謝に合わせています。</p>' : ''}
-      <p class="hint">基礎代謝は Mifflin-St Jeor 式、体重は ${tg.weightDate ? `${md(tg.weightDate)} の記録（${tg.weight}kg）` : `プロフィールの ${tg.weight}kg`}で計算。たんぱく質は体重 1kg あたり ${tg.goal.pkg}g、脂質はカロリーの 25%、残りを炭水化物にしています。あくまで目安です。持病がある方や妊娠中の方は医師に相談してください。</p>`;
+      ${tg.clamped ? '<p class="hint">減量でも、基礎代謝と最低ライン（男性 1,500 / 女性・その他 1,200 kcal）を下回らないよう目標を調整しています。</p>' : ''}
+      <p class="hint">基礎代謝は Mifflin-St Jeor 式、体重は ${tg.weightDate ? `${md(tg.weightDate)} の記録（${kg(tg.weight)}kg）` : `プロフィールの ${kg(tg.weight)}kg`}で計算。たんぱく質は${proteinBase} 1kg あたり ${tg.goal.pkg}g（エネルギーの 35% まで）、脂質はカロリーの 25%、残りを炭水化物にしています。あくまで目安です。持病がある方や妊娠中・授乳中の方は医師に相談してください。</p>`;
   }
 
   $('#weight-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    checkDayRollover();
     if (!S.db) return toast('保存先に接続できていません。claude.ai で開いてください');
     const date = $('#w-date').value || today(); const w = r1($('#w-value').value);
     if (!validDate(date) || date > today()) return toast('日付を確認してください');
     if (!(w >= 25 && w <= 300)) return toast('体重は 25〜300 kg で入力してください');
+    const btn = $('#weight-form button[type=submit]'); if (btn.disabled) return; btn.disabled = true;
     try {
       await S.db.collection('weights').doc(date).set({ date, weight: w, createdAt: new Date().toISOString() });
       $('#w-value').value = ''; $('#w-date').value = today();
-      S.profileDirty = false;
-      toast(`${md(date)} の体重 ${w}kg を記録しました`);
-    } catch (err) { toast(dbErrMsg(err)); }
+      toast(`${md(date)} の体重 ${kg(w)}kg を記録しました`);
+    } catch (err) { toast(dbErrMsg(err)); } finally { btn.disabled = false; }
   });
   function renderWeightList() {
     const list = [...S.weights].sort((a, b) => b.date.localeCompare(a.date));
-    $('#weight-list').innerHTML = list.slice(0, 10).map((w, i) => {
+    const shown = S.showAllWeights ? list : list.slice(0, 10);
+    $('#weight-list').innerHTML = shown.map((w, i) => {
       const prev = list[i + 1]; const d = prev ? r1(w.weight - prev.weight) : null;
-      return `<li><span>${esc(md(w.date))}（${weekday(w.date)}）</span><b>${w.weight} kg</b><span class="d">${d === null ? '' : `${d > 0 ? '+' : ''}${d}`}</span>
+      return `<li><span>${esc(md(w.date))}（${weekday(w.date)}）</span><b>${kg(w.weight)} kg</b><span class="d">${d === null ? '' : `${d > 0 ? '+' : ''}${d.toFixed(1)}`}</span>
         <button type="button" class="ghost danger" data-wdel="${esc(w.id)}" aria-label="${esc(md(w.date))} の体重を削除">削除</button></li>`;
-    }).join('');
+    }).join('') + (list.length > 10 ? `<li class="more"><button type="button" class="ghost" data-wmore>${S.showAllWeights ? '最新 10 件だけ表示' : `すべて表示（${list.length}件）`}</button></li>` : '');
   }
   $('#weight-list').addEventListener('click', async (e) => {
+    if (e.target.closest('[data-wmore]')) { S.showAllWeights = !S.showAllWeights; renderWeightList(); return; }
     const b = e.target.closest('[data-wdel]'); if (!b) return;
     if (!armDelete(b)) return;
+    b.disabled = true;
     try { await S.db.collection('weights').doc(b.dataset.wdel).delete(); toast('削除しました'); }
-    catch (err) { toast(dbErrMsg(err)); }
+    catch (err) { toast(dbErrMsg(err)); } finally { b.disabled = false; }
   });
 
   // ======================================================== export
@@ -1495,7 +1671,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const ws = sortedWorkouts().filter((w) => w.date >= from);
     L.push('', '## 筋トレ');
     if (!ws.length) L.push('記録なし');
-    ws.forEach((w) => L.push(`### ${w.date}${w.title ? ' ' + w.title : ''}`, ...w.exercises.map((e) => `- ${e.name}: ${e.sets.map((s) => `${s.weight}kg×${s.reps}`).join(', ')}`), ...(w.notes ? [`- メモ: ${w.notes}`] : [])));
+    ws.forEach((w) => L.push(`### ${w.date}${w.title ? ' ' + w.title : ''}`, ...w.exercises.map((e) => `- ${e.name}: ${fmtSets(e.sets)}`), ...(w.notes ? [`- メモ: ${w.notes}`] : [])));
     L.push('', '## 食事（日別合計）');
     let any = false;
     for (let i = days - 1; i >= 0; i--) {
@@ -1506,7 +1682,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     if (!any) L.push('記録なし');
     const wts = S.weights.filter((w) => w.date >= from).sort((a, b) => a.date.localeCompare(b.date));
     L.push('', '## 体重');
-    L.push(wts.length ? wts.map((w) => `${w.date}: ${w.weight}kg`).join(' / ') : '記録なし');
+    L.push(wts.length ? wts.map((w) => `${w.date}: ${kg(w.weight)}kg`).join(' / ') : '記録なし');
     return L.join('\n');
   }
   function renderExport() { $('#export').textContent = exportText(Number($('#export-days').value)); }
@@ -1521,23 +1697,40 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   };
 
   // ======================================================== chat with Claude
+  function cleanAction(a) {
+    return { kind: String(a.kind), id: String(a.id), label: String(a.label || ''), photoId: typeof a.photoId === 'string' ? a.photoId : null,
+      prev: a.prev && typeof a.prev === 'object' ? { date: String(a.prev.date), weight: Number(a.prev.weight), createdAt: a.prev.createdAt || null } : null,
+      wrote: a.wrote && typeof a.wrote === 'object' ? { weight: Number(a.wrote.weight), createdAt: a.wrote.createdAt || null } : null,
+      undone: !!a.undone };
+  }
   function loadChat() {
     try {
       const raw = JSON.parse(localStorage.getItem('wl-chat') || '[]');
       if (Array.isArray(raw)) S.chat = raw.filter((m) => m && (m.role === 'user' || m.role === 'assistant')).slice(-40)
-        .map((m) => ({ role: m.role, content: String(m.content || ''), hadImage: !!m.hadImage, error: m.error ? String(m.error) : '',
-          actions: Array.isArray(m.actions) ? m.actions.filter((a) => a && a.kind && a.id).map((a) => ({ kind: String(a.kind), id: String(a.id), label: String(a.label || ''), photoId: a.photoId || null, prev: a.prev || null, undone: !!a.undone })) : [] }));
+        .map((m) => ({ role: m.role, content: String(m.content || ''), display: m.display != null ? String(m.display) : undefined,
+          hadImage: !!m.hadImage, error: m.error ? String(m.error) : '',
+          actions: Array.isArray(m.actions) ? m.actions.filter((a) => a && ['workout', 'meal', 'weight'].includes(a.kind) && a.id).map(cleanAction) : [] }));
     } catch { S.chat = []; }
   }
   function saveChat() {
     try {
-      localStorage.setItem('wl-chat', JSON.stringify(S.chat.filter((m) => !m.pending).slice(-40)
-        .map(({ role, content, hadImage, error, actions }) => ({ role, content, hadImage: !!hadImage, error: error || '', actions: actions || [] }))));
+      // A reply still streaming is kept when it already recorded something, so its undo chips survive a reload.
+      localStorage.setItem('wl-chat', JSON.stringify(S.chat.filter((m) => !m.pending || m.actions?.length).slice(-40)
+        .map(({ role, content, display, hadImage, error, actions, pending }) => ({
+          role, content, ...(display != null ? { display: String(display) } : {}), hadImage: !!hadImage,
+          error: error || (pending ? '回答が途中で中断されました。' : ''), actions: actions || [] }))));
     } catch {}
   }
+  const nearBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160;
   function scrollChatToEnd() {
     if (currentTab !== 'claude') return;
-    $('#chat-form').scrollIntoView({ block: 'end' });
+    requestAnimationFrame(() => {
+      const last = $('#chat-log').lastElementChild; if (!last) return;
+      const form = $('#chat-form');
+      const limit = form.hidden ? window.innerHeight - 90 : form.getBoundingClientRect().top - 12;
+      const overflow = last.getBoundingClientRect().bottom - limit;
+      if (overflow > 0) window.scrollBy({ top: overflow });
+    });
   }
   function msgEl(m) {
     const el = document.createElement('div');
@@ -1545,7 +1738,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     if (m.role === 'user') {
       if (m.imageUrl) { const img = document.createElement('img'); img.src = m.imageUrl; img.alt = '送った写真'; el.append(img); }
       else if (m.hadImage) { const n = document.createElement('span'); n.className = 'photo-note'; n.textContent = '写真を添付'; el.append(n); }
-      const text = (m.display ?? m.content).trim();
+      const text = (m.display ?? (m.hadImage ? m.content.replace(/\n?［写真を1枚添付］$/, '') : m.content)).trim();
       if (text) { const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text; el.append(b); }
       return el;
     }
@@ -1555,7 +1748,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       row.append(lab);
       if (!a.undone) {
         const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = '取り消す';
-        u.onclick = () => undoAction(a, u);
+        u.setAttribute('aria-label', `取り消す：${a.label}`);
+        u.onclick = () => { if (armDelete(u)) undoAction(a, u); };
         row.append(u);
       }
       el.append(row);
@@ -1608,9 +1802,10 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       'あなたはこの筋トレ・食事記録アプリに組み込まれたアシスタントで、パーソナルトレーナー兼管理栄養士として振る舞います。日本語で、簡潔に答えてください。',
       '・回答はプレーンテキスト。見出し記号(#)、太字(**)、表は使わない。箇条書きは「・」を使う。',
       '・重量・回数・kcal・g などの数字を使って具体的に答える。',
-      S.canTools
-        ? '・ユーザーがトレーニング・食事・体重を報告したら、確認せずに該当するツール（log_workout / log_meal / log_weight）ですぐ記録し、記録した内容を数字つきで一言伝える。会話履歴の［記録済み］にあるものを二重に記録しない。\n・食事の写真が添付されたら、料理と量を推定して log_meal で記録し、推定であることと前提を一言添える。写真が食事でなければ記録しない。\n・記録の修正・削除はできない。チャットの「取り消す」ボタンや各タブの編集・削除を案内する。'
-        : '・この画面では記録を書き込めない。記録したい内容があれば「筋トレ」「食事」「からだ」タブから入力するよう案内する。',
+      canRecord()
+        ? '・ユーザーがトレーニング・食事・体重を報告したら、確認せずに該当するツール（log_workout / log_meal / log_weight）ですぐ記録し、記録した内容を数字つきで一言伝える。会話履歴の［記録済み］にあるものを二重に記録しない。\n・食事の写真が添付されたら、料理と量を推定して log_meal で記録し（写真の食事には from_photo: true を付ける）、推定であることと前提を一言添える。写真が食事でなければ記録しない。\n・未来の日付には記録しない。\n・記録の修正・削除はできない。チャットの「取り消す」ボタンや各タブの編集・削除を案内する。'
+        : S.db ? '・この画面では記録を書き込めない。記録したい内容があれば「筋トレ」「食事」「からだ」タブから入力するよう案内する。'
+          : '・この画面では記録を保存できない（サインインしていない）。記録できないことを伝え、相談にだけ答える。',
       '・日付の指定がなければ今日の日付。「昨日」などは下の今日の日付から計算する。',
       '・怪我・痛み・持病・極端な食事制限の話題では無理をさせず、医療機関への相談をすすめる。',
       '',
@@ -1622,10 +1817,12 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const tg = computeTargets(), p = S.profile, lw = latestWeight();
     L.push(`今日: ${today()}（${weekday(today())}） 現在時刻 ${nowHM()}`);
     L.push('', '## プロフィールと目標');
-    if (p) L.push(`身長 ${p.height ?? '?'}cm / 体重 ${lw ? `${lw.weight}kg` : '?'} / ${p.age ?? '?'}歳 / ${SEX[p.sex] || '性別未設定'} / 活動量: ${ACTIVITY[p.activity]?.label || '?'} / 目標: ${GOALS[p.goal]?.label || '維持'}`);
+    if (p) L.push(`身長 ${p.height ?? '?'}cm / 体重 ${lw ? `${lw.weight}kg` : '?'} / ${p.age ?? '?'}歳 / ${own(SEX, p.sex) || '性別未設定'} / 活動量: ${own(ACTIVITY, p.activity)?.label || '?'} / 目標: ${own(GOALS, p.goal)?.label || '維持'}`);
     else L.push('未設定（「からだ」タブで設定できる）');
     if (tg) L.push(`1日の目標: ${tg.kcal}kcal（P ${tg.protein}g / F ${tg.fat}g / C ${tg.carbs}g）、基礎代謝 ${tg.bmr}kcal、TDEE ${tg.tdee}kcal`);
     const t = dayTotals(today());
+    const lost = [...S.dead].map((k) => ({ workouts: '筋トレ', meals: '食事', weights: '体重', profile: 'プロフィール' }[k])).filter(Boolean);
+    if (lost.length) L.push('', `※ ${lost.join('・')}のデータは読み込めていない（記録なしとは限らない）`);
     L.push('', `## 今日の食事（合計 ${fmt(t.kcal)}kcal / P ${fmt(t.protein)}g / F ${fmt(t.fat)}g / C ${fmt(t.carbs)}g）`);
     const todays = mealsOn(today());
     if (!todays.length) L.push('- まだ記録なし');
@@ -1636,7 +1833,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       L.push(`- ${d}: ${x.count ? `${fmt(x.kcal)}kcal（P ${fmt(x.protein)} / F ${fmt(x.fat)} / C ${fmt(x.carbs)}）` : '記録なし'}`);
     }
     const wts = [...S.weights].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
-    L.push('', '## 体重（新しい順）', wts.length ? wts.map((w) => `${w.date}: ${w.weight}kg`).join(' / ') : '記録なし');
+    L.push('', '## 体重（新しい順）', wts.length ? wts.map((w) => `${w.date}: ${kg(w.weight)}kg`).join(' / ') : '記録なし');
     const recent = sortedWorkouts().filter((w) => w.date >= daysAgo(13));
     L.push('', '## 直近14日の筋トレ');
     if (!recent.length) L.push('- 記録なし');
@@ -1644,7 +1841,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const prs = records().slice(0, 15);
     if (prs.length) {
       L.push('', '## 自己ベスト');
-      prs.forEach((r) => L.push(`- ${r.name}: 最大 ${r.max.weight}kg×${r.max.reps}（${r.max.date}）/ 推定1RM ${r.best.v}kg / ${r.sessions}回実施`));
+      prs.forEach((r) => L.push(`- ${r.name}: 最大 ${r.max.weight ? r.max.weight + 'kg' : '自重'}×${r.max.reps}（${r.max.date}）${r.best.v ? ` / 推定1RM ${r.best.v}kg` : ''} / ${r.sessions}回実施`));
     }
     return L.join('\n').slice(0, 24000);
   }
@@ -1680,6 +1877,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         kcal: { type: 'number' }, protein: { type: 'number', description: 'g' }, fat: { type: 'number', description: 'g' }, carbs: { type: 'number', description: 'g' },
       }, required: ['name', 'kcal', 'protein', 'fat', 'carbs'] } },
       note: { type: 'string', description: '推定の前提など（任意）' },
+      from_photo: { type: 'boolean', description: '添付された写真に写っている食事なら true（写真以外の食事には付けない）' },
     },
     required: ['title', 'items'],
   };
@@ -1709,28 +1907,38 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
           need();
           const data = validateMeal(input);
           if (signal.aborted) throw new Error('中止されました');
+          const before = dayTotals(data.date);
           let photoId = null;
-          if (ctx.photo && !ctx.photoUsed) { ctx.photoUsed = true; photoId = await uploadPhoto(ctx.photo.file); }
+          if (ctx.photo && !ctx.photoUsed && input.from_photo === true) {
+            ctx.photoUsed = true;
+            photoId = await uploadPhoto(ctx.photo.file);
+            if (signal.aborted) { deletePhoto(photoId); ctx.photoUsed = false; throw new Error('中止されました'); }
+          }
           const ref = await S.db.collection('meals').add({ ...data, photoId, source: 'claude', createdAt: new Date().toISOString() });
           ctx.addAction({ kind: 'meal', id: ref.id, photoId, label: `食事を記録 ${md(data.date)} ${MEAL_TYPES[data.type]}：${data.title} ${fmt(data.kcal)}kcal（P ${data.protein} / F ${data.fat} / C ${data.carbs}）`.slice(0, 140) });
-          const t = dayTotals(data.date); const tg = computeTargets();
-          return `記録しました: ${data.title} ${data.kcal}kcal P${data.protein} F${data.fat} C${data.carbs}。${data.date} の合計は記録前 ${fmt(t.kcal)}kcal ＋ 今回 ${data.kcal}kcal${tg ? `（目標 ${tg.kcal}kcal）` : ''}`;
+          const tg = computeTargets();
+          return `記録しました: ${data.title} ${data.kcal}kcal P${data.protein} F${data.fat} C${data.carbs}。${data.date} の合計は ${fmt(before.kcal + data.kcal)}kcal${tg ? `（目標 ${tg.kcal}kcal）` : ''}`;
         },
       },
       {
         name: 'log_weight',
         description: '体重を記録する（1日1件。同じ日の記録は上書き）。ユーザーが体重を報告したら使う。',
         inputSchema: { type: 'object', properties: { weight: { type: 'number', description: 'kg' }, date: { type: 'string', description: 'YYYY-MM-DD。省略すると今日' } }, required: ['weight'] },
-        async execute(input) {
+        async execute(input, { signal }) {
           need();
           const date = input.date ? String(input.date) : today();
-          if (!validDate(date) || date > today()) throw new Error('日付が不正です');
+          if (!validDate(date) || date > today()) throw new Error('日付が不正です（未来の日付には記録できません）');
           const w = r1(input.weight);
           if (!(w >= 25 && w <= 300)) throw new Error('体重は 25〜300kg の範囲で指定してください');
-          const prevDoc = S.weights.find((x) => x.date === date);
-          await S.db.collection('weights').doc(date).set({ date, weight: w, createdAt: new Date().toISOString() });
-          ctx.addAction({ kind: 'weight', id: date, label: `体重を記録 ${md(date)}：${w}kg`, prev: prevDoc ? { date, weight: prevDoc.weight, createdAt: prevDoc.createdAt || null } : null });
-          return `記録しました: ${date} ${w}kg`;
+          const ref = S.db.collection('weights').doc(date);
+          const snap = await ref.get();
+          const prevDoc = snap.exists ? snap.data() : null;
+          if (signal.aborted) throw new Error('中止されました');
+          const createdAt = new Date().toISOString();
+          await ref.set({ date, weight: w, createdAt });
+          ctx.addAction({ kind: 'weight', id: date, label: `体重を記録 ${md(date)}：${kg(w)}kg`, wrote: { weight: w, createdAt },
+            prev: prevDoc ? { date, weight: Number(prevDoc.weight), createdAt: prevDoc.createdAt || null } : null });
+          return `記録しました: ${date} ${kg(w)}kg`;
         },
       },
       {
@@ -1740,8 +1948,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         execute(input) {
           const date = String(input.date || '');
           if (!validDate(date)) throw new Error('日付は YYYY-MM-DD で指定してください');
+          const t = dayTotals(date);
           return {
-            date, nutrition: dayTotals(date),
+            date, nutrition: { kcal: Math.round(t.kcal), protein: r1(t.protein), fat: r1(t.fat), carbs: r1(t.carbs), meals: t.count },
             meals: mealsOn(date).map((m) => ({ time: m.time, type: MEAL_TYPES[m.type], title: m.title, kcal: m.kcal, protein: m.protein, fat: m.fat, carbs: m.carbs, items: m.items.map((i) => `${i.name}${i.amount ? `(${i.amount})` : ''} ${i.kcal}kcal`) })),
             workouts: S.workouts.filter((w) => w.date === date).map((w) => ({ title: w.title, exercises: w.exercises.map((e) => `${e.name} ${fmtSets(e.sets)}`), notes: w.notes })),
           };
@@ -1749,14 +1958,18 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       },
       {
         name: 'get_workouts',
-        description: '過去の筋トレ記録を新しい順に返す（最大40件）。種目名で絞り込める。直近14日より前の記録や特定種目の推移を見るときに使う。',
+        description: '過去の筋トレ記録を新しい順に返す（最大40件。量が多いと古いものは省略され omitted に件数が入る）。種目名で絞り込める。直近14日より前の記録や特定種目の推移を見るときに使う。',
         inputSchema: { type: 'object', properties: { days: { type: 'integer', description: '何日前まで（既定90、最大730）' }, exercise: { type: 'string', description: '種目名の一部' } } },
         execute(input) {
           const days = Math.min(730, Math.max(1, Math.round(Number(input.days) || 90)));
           const q = String(input.exercise || '').toLowerCase();
-          return sortedWorkouts().filter((w) => w.date >= daysAgo(days - 1))
-            .map((w) => ({ date: w.date, title: w.title, exercises: w.exercises.filter((e) => !q || e.name.toLowerCase().includes(q)).map((e) => `${e.name} ${fmtSets(e.sets)}`) }))
+          const rows = sortedWorkouts().filter((w) => w.date >= daysAgo(days - 1))
+            .map((w) => ({ date: w.date, title: w.title, exercises: w.exercises.filter((e) => !q || e.name.toLowerCase().includes(q)).map((e) => `${e.name} ${fmtSets(e.sets)}`.slice(0, 300)) }))
             .filter((w) => w.exercises.length).slice(0, 40);
+          // Keep the result well under the 32 KB tool-result limit.
+          const enc = new TextEncoder(); const out = []; let bytes = 64;
+          for (const r of rows) { const n = enc.encode(JSON.stringify(r)).length + 1; if (bytes + n > 16000) break; out.push(r); bytes += n; }
+          return { workouts: out, omitted: rows.length - out.length };
         },
       },
     ];
@@ -1767,27 +1980,46 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     if (!S.db) return;
     btn.disabled = true;
     try {
-      if (a.kind === 'workout') await S.db.collection('workouts').doc(a.id).delete();
-      else if (a.kind === 'meal') { await S.db.collection('meals').doc(a.id).delete(); deletePhoto(a.photoId); }
-      else if (a.kind === 'weight') {
-        if (a.prev) await S.db.collection('weights').doc(a.id).set({ date: a.prev.date, weight: a.prev.weight, createdAt: a.prev.createdAt || new Date().toISOString() });
-        else await S.db.collection('weights').doc(a.id).delete();
+      const coll = a.kind === 'workout' ? 'workouts' : a.kind === 'meal' ? 'meals' : 'weights';
+      const ref = S.db.collection(coll).doc(a.id);
+      const cur = await ref.get();
+      const d = cur.exists ? cur.data() : null;
+      // Undo only what Claude wrote: a record changed or removed since then is left alone.
+      const changed = !d || d.updatedAt || (a.kind === 'weight' && (!a.wrote || Number(d.weight) !== a.wrote.weight || d.createdAt !== a.wrote.createdAt));
+      if (changed) {
+        a.undone = true; saveChat(); renderChat();
+        toast('この記録はその後変更・削除されているため、取り消しませんでした');
+        return;
       }
+      if (a.kind === 'weight' && a.prev) await ref.set({ date: a.prev.date, weight: a.prev.weight, createdAt: a.prev.createdAt || new Date().toISOString() });
+      else await ref.delete();
+      if (a.kind === 'meal') deletePhoto(a.photoId);
+      if (a.kind === 'meal' && S.editingMealId === a.id) closeMealForm();
+      if (a.kind === 'workout' && S.editingId === a.id) resetForm();
       a.undone = true; saveChat(); renderChat();
+      chatInput.focus({ preventScroll: true });
       toast('取り消しました');
     } catch (err) { btn.disabled = false; toast(dbErrMsg(err)); }
   }
 
   function setChatBusy(busy) {
+    const sendHadFocus = document.activeElement === $('#chat-send');
+    const stopHadFocus = document.activeElement === $('#chat-stop');
     $('#chat-send').hidden = busy; $('#chat-stop').hidden = !busy;
-    chatInput.disabled = busy;
+    chatInput.readOnly = busy;
+    if (busy && sendHadFocus) $('#chat-stop').focus();
+    if (!busy && (stopHadFocus || document.activeElement === document.body)) chatInput.focus({ preventScroll: true });
   }
+  const enc = new TextEncoder();
+  const bytes = (t) => enc.encode(t).length;
   async function sendChat(raw) {
+    checkDayRollover();
     const text = String(raw || '').trim();
     const photo = S.chatPhoto;
     if (!text && !photo) return toast('メッセージを入力してください');
     if (!S.sample || S.claudeOff) return;
     if (S.chatAbort) return;
+    if (bytes(text) > 20000) return toast('メッセージが長すぎます。短くして送ってください');
     const userMsg = { role: 'user', display: text, hadImage: !!photo, imageUrl: photo?.url || null,
       content: photo ? `${text ? text + '\n' : ''}［写真を1枚添付］` : text };
     const reply = { role: 'assistant', content: '', actions: [], pending: true, error: '' };
@@ -1798,32 +2030,50 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const ctrl = new AbortController(); S.chatAbort = ctrl; setChatBusy(true);
     const ctx = {
       photo, photoUsed: false,
-      addAction(a) { reply.actions.push(a); saveChat(); renderChat(); scrollChatToEnd(); },
+      addAction(a) { const follow = nearBottom(); reply.actions.push(a); saveChat(); renderChat(); if (follow) scrollChatToEnd(); },
     };
     try {
-      const history = S.chat.filter((m) => m !== reply && !m.pending).slice(-17, -1)
-        .map((m) => ({ role: m.role, content: turnContent(m) })).filter((m) => m.content);
-      const input = [{ role: 'user', content: `${chatRules()}\n\n${chatContext()}` }, ...history, { role: 'user', content: userMsg.content }];
+      const lead = `${chatRules()}\n\n${chatContext()}`;
+      // Keep the whole request well under the prompt limit: newest turns first, each capped.
+      let budget = (S.maxPromptBytes || 262144) - 16384 - bytes(lead) - bytes(userMsg.content);
+      const history = [];
+      for (const m of S.chat.filter((x) => x !== reply && x !== userMsg && !x.pending).slice(-16).reverse()) {
+        const c = turnContent(m).slice(0, 4000);
+        if (!c) continue;
+        const n = bytes(c);
+        if (n > budget) break;
+        budget -= n; history.unshift({ role: m.role, content: c });
+      }
+      const input = [{ role: 'user', content: lead }, ...history, { role: 'user', content: userMsg.content }];
       const opts = {
         signal: ctrl.signal, modelTier: 'default',
-        onText: ({ text: t }) => { reply.content = t; if (reply.el) { reply.el.textContent = t; reply.el.classList.remove('thinking'); } else renderChat(); },
+        onText: ({ text: t }) => {
+          const follow = nearBottom();
+          reply.content = t;
+          if (reply.el) { reply.el.textContent = t; reply.el.classList.remove('thinking'); } else renderChat();
+          if (follow) scrollChatToEnd();
+        },
       };
       if (photo) opts.images = [await imageForClaude(photo.file)];
-      if (S.canTools) opts.tools = chatTools(ctx); else opts.cache = false;
+      if (canRecord()) opts.tools = chatTools(ctx); else opts.cache = false;
       if (ctrl.signal.aborted) throw { code: 'cancelled' };
       const res = await S.sample(input, opts);
       reply.content = res.text;
       if (res.truncated) reply.error = '回答が途中で切れました。';
     } catch (err) {
       if (err?.code === 'cancelled') { reply.content = err.text || reply.content || ''; if (!reply.content && !reply.actions.length) reply.error = '停止しました。'; }
-      else if (err?.code === 'refused') { reply.content = ''; reply.error = sampleErrMsg(err); }
-      else { reply.content = err?.text || reply.content || ''; reply.error = sampleErrMsg(err); }
+      else if (err?.code === 'refused') { reply.content = ''; reply.error = sampleErrMsg(err, 'sample'); }
+      else { reply.content = err?.text || reply.content || ''; reply.error = sampleErrMsg(err, 'sample'); }
     } finally {
       reply.pending = false;
       if (S.chatAbort === ctrl) S.chatAbort = null;
       setChatBusy(false);
       if (!reply.content && !reply.actions.length && !reply.error) reply.error = '回答がありませんでした。';
       saveChat(); renderChat(); scrollChatToEnd();
+      $('#chat-status').textContent = [
+        reply.content ? `Claude: ${reply.content.slice(0, 200)}` : reply.error,
+        ...reply.actions.map((x) => `記録: ${x.label}`),
+      ].filter(Boolean).join(' / ');
     }
   }
 
@@ -1841,16 +2091,35 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (currentTab === 'body') drawWeightChart();
       renderExport();
       const all = Object.values(S.loaded).every(Boolean);
-      if (S.db && all) {
-        $('#status').textContent = `同期済み・筋トレ ${S.workouts.length} / 食事 ${S.meals.length}`;
-        $('#status').classList.remove('err');
+      if (S.db && S.dead.size) {
+        $('#status').textContent = '同期が切れました。再読み込みしてください'; $('#status').classList.add('err');
+      } else if (S.db && all) {
+        $('#status').textContent = '同期済み'; $('#status').classList.remove('err');
       }
     });
   }
 
+  // ======================================================== day rollover
+  // The page may stay open past midnight; date defaults must follow the clock.
+  let bootDay = today();
+  function checkDayRollover() {
+    const t = today();
+    if (t === bootDay) return;
+    const old = bootDay; bootDay = t;
+    if (S.day === old) S.day = t;
+    if ($('#w-date').value === old) $('#w-date').value = t;
+    if (!S.editingId && $('#f-date').value === old) $('#f-date').value = t;
+    $('#w-date').max = t; $('#f-date').max = t; $('#m-date').max = t;
+    renderAll();
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDayRollover(); });
+  window.addEventListener('focus', checkDayRollover);
+  setInterval(checkDayRollover, 60000);
+
   // ======================================================== boot
   S.day = today();
   $('#w-date').value = today();
+  $('#w-date').max = today(); $('#f-date').max = today(); $('#m-date').max = today();
   resetForm();
   loadChat();
   renderChat();
@@ -1861,6 +2130,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   showTab(initial);
 
   if (!window.claude?.use) {
+    S.sampleState = 'off'; applyClaudeAvailability();
     $('#status').textContent = 'オフライン表示（保存できません）'; $('#status').classList.add('err');
     Object.keys(S.loaded).forEach((k) => { S.loaded[k] = true; });
     renderAll();
@@ -1879,35 +2149,38 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const items = (Array.isArray(x.items) ? x.items : []).map(cleanItem);
     const tot = items.length ? sumItems(items) : { kcal: num(x.kcal), protein: num(x.protein, 1), fat: num(x.fat, 1), carbs: num(x.carbs, 1) };
     return { ...x, id: d.id, date: String(x.date || ''), time: TIME_RE.test(String(x.time || '')) ? x.time : '12:00',
-      type: MEAL_TYPES[x.type] ? x.type : 'snack', title: String(x.title || '食事'), items, ...tot,
+      type: own(MEAL_TYPES, x.type) ? x.type : 'snack', title: String(x.title || '食事'), items, ...tot,
       photoId: typeof x.photoId === 'string' ? x.photoId : null, note: String(x.note || '') };
   };
   const normWeight = (d) => { const x = d.data() || {}; return { id: d.id, date: String(x.date || d.id), weight: num(x.weight, 1), createdAt: x.createdAt || null }; };
 
-  function syncError() { $('#status').textContent = '同期が切れました。ページを再読み込みしてください'; $('#status').classList.add('err'); }
+  const syncError = (key) => () => { S.dead.add(key); S.loaded[key] = true; renderAll(); };
   claude.use('db').then((db) => {
     if (!db) {
-      $('#status').textContent = 'サインインすると記録を保存できます'; $('#status').classList.add('err');
+      $('#status').textContent = 'サインインすると保存できます'; $('#status').classList.add('err');
       Object.keys(S.loaded).forEach((k) => { S.loaded[k] = true; });
-      renderAll(); return;
+      applyClaudeAvailability(); renderAll(); return;
     }
     S.db = db;
+    applyClaudeAvailability();
     const sub = (query, key, norm) => query.onSnapshot((snap) => {
       S[key] = snap.docs.map(norm).filter((x) => validDate(x.date));
       S.loaded[key] = true; renderAll();
-    }, syncError);
+    }, syncError(key));
     sub(db.collection('workouts'), 'workouts', normWorkout);
     sub(db.collection('meals').where('date', '>=', daysAgo(400)), 'meals', normMeal);
     sub(db.collection('weights'), 'weights', normWeight);
     db.doc('settings/profile').onSnapshot((snap) => {
       S.profile = snap.exists ? (snap.data() || null) : null;
       S.loaded.profile = true; renderAll();
-    }, syncError);
+    }, syncError('profile'));
   });
   claude.use('sample').then(async (sample) => {
-    if (!sample) { applyClaudeAvailability(); return; }
+    if (!sample) { S.sampleState = 'off'; applyClaudeAvailability(); return; }
     S.sample = sample;
     const lim = await sample.limits().catch(() => null);
+    S.sampleState = 'ready';
+    S.maxPromptBytes = Number(lim?.maxPromptBytes) || 262144;
     S.canImages = !!lim?.images;
     S.imageTypes = lim?.images?.mediaTypes || [];
     S.maxImageBytes = lim?.images?.maxInputBytes || 0;
