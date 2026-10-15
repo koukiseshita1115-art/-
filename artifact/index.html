@@ -510,7 +510,7 @@
 
   const S = {
     db: null, sample: null, assets: null,
-    sampleState: 'pending', claudeOff: false, claudeOffReason: '', jsonOff: false,
+    sampleState: 'pending', dbState: 'pending', claudeOff: false, claudeOffReason: '', jsonOff: false,
     canImages: false, canTools: false, toolMax: 0, imageTypes: [], maxImageBytes: 0, maxPromptBytes: 262144,
     workouts: [], meals: [], weights: [], profile: null,
     loaded: { workouts: false, meals: false, weights: false, profile: false },
@@ -703,9 +703,14 @@
     const tdee = bmr * act.f;
     let kcal = tdee * goal.kcalF, clamped = false;
     // Never below BMR, and a deficit never below a basic floor (1,500 / 1,200 kcal) unless that exceeds maintenance.
-    const floor = Math.max(bmr, Math.min(tdee, p.sex === 'male' ? 1500 : 1200));
-    if (kcal < floor) { kcal = Math.ceil(floor / 10) * 10; clamped = true; }
-    else kcal = Math.round(kcal / 10) * 10;
+    const minKcal = p.sex === 'male' ? 1500 : 1200;
+    const noDeficit = goal.kcalF < 1 && tdee <= minKcal;
+    if (noDeficit) { kcal = Math.floor(tdee / 10) * 10; clamped = true; }
+    else {
+      const floor = Math.max(bmr, minKcal);
+      if (kcal < floor) { kcal = Math.min(Math.ceil(floor / 10) * 10, Math.floor(tdee / 10) * 10); clamped = true; }
+      else kcal = Math.round(kcal / 10) * 10;
+    }
     // Protein per kg of body weight; with BMI over 25 use an adjusted weight (ideal + 25% of the excess), capped at 35% of energy.
     const ibw = 22 * hm * hm;
     const refW = bmi > 25 ? ibw + 0.25 * (w - ibw) : w;
@@ -714,7 +719,7 @@
     if (protein * 4 + fat * 9 > kcal) fat = Math.max(0, Math.floor((kcal - protein * 4) / 9));
     const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
     return { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, protein, fat, carbs, bmi, weight: w, weightDate: lw.date,
-      act, goal, clamped, cutBlocked, adjusted: refW !== w, refW: r1(refW) };
+      act, goal, clamped, noDeficit, cutBlocked, adjusted: refW !== w, refW: r1(refW) };
   }
 
   // ======================================================== tabs
@@ -836,10 +841,11 @@
     $('#chat-form').hidden = !on;
     $('#chat-empty').hidden = !on || S.chat.length > 0;
     $('#chat-attach').hidden = !(on && S.canImages);
-    $('#chat-intro').textContent = canRecord()
+    $('#chat-intro').textContent = canRecord() || (S.dbState === 'pending' && S.canTools)
       ? '記録したいことをそのまま送ると、Claude が筋トレ・食事・体重を記録します。食事の写真も送れます。あなたの記録をもとに相談にも答えます。'
       : S.db ? 'あなたの記録をもとに Claude が相談に答えます（この画面では Claude からの自動記録は使えません）。'
-        : 'Claude に相談できます（サインインしていないため、記録の保存はできません）。';
+        : S.dbState === 'pending' ? 'あなたの記録をもとに Claude が相談に答えます。'
+          : 'Claude に相談できます（サインインしていないため、記録の保存はできません）。';
   }
 
   // ======================================================== training form
@@ -993,6 +999,7 @@ ${text}
 
   // ======================================================== training history / records
   function renderStats() {
+    if (S.dead.has('workouts')) { $('#stats').innerHTML = ''; return; }
     const since = daysAgo(29);
     const recent = S.workouts.filter((w) => w.date >= since);
     const days = new Set(recent.map((w) => w.date)).size;
@@ -1030,22 +1037,25 @@ ${text}
   }
   $('#filter').addEventListener('input', renderHistory);
 
-  // two-step delete button helper (the viewer cannot show confirm()).
-  // The second press must come at least 400ms later, so a double tap never deletes.
-  function armDelete(btn) {
+  // two-step confirm helper (the viewer cannot show confirm()).
+  // The second press must come at least 400ms later, so a double tap never fires it.
+  // The armed label stays short so the card does not reflow.
+  function disarm(btn) {
+    btn.classList.remove('armed');
+    if (btn.dataset.label !== undefined) btn.textContent = btn.dataset.label;
+    if (btn.dataset.aria !== undefined) btn.setAttribute('aria-label', btn.dataset.aria); else btn.removeAttribute('aria-label');
+    delete btn.dataset.label; delete btn.dataset.aria; delete btn.dataset.armedAt;
+  }
+  function armDelete(btn, { text = '確定', hint = 'もう一度押すと削除します' } = {}) {
     if (btn.classList.contains('armed')) return Date.now() - Number(btn.dataset.armedAt || 0) > 400;
     const al = btn.getAttribute('aria-label');
     btn.classList.add('armed'); btn.dataset.armedAt = String(Date.now());
     btn.dataset.label = btn.textContent;
     if (al !== null) btn.dataset.aria = al;
-    btn.textContent = '削除する？';
-    btn.setAttribute('aria-label', `もう一度押すと削除します${al ? '：' + al : ''}`);
-    toast('もう一度押すと削除します');
-    setTimeout(() => {
-      if (!btn.isConnected) return;
-      btn.classList.remove('armed'); btn.textContent = btn.dataset.label;
-      if (btn.dataset.aria !== undefined) btn.setAttribute('aria-label', btn.dataset.aria); else btn.removeAttribute('aria-label');
-    }, 3000);
+    btn.textContent = text;
+    btn.setAttribute('aria-label', `${hint}${al ? '：' + al : ''}`);
+    toast(hint);
+    setTimeout(() => { if (btn.isConnected && btn.classList.contains('armed')) disarm(btn); }, 3000);
     return false;
   }
 
@@ -1072,6 +1082,7 @@ ${text}
   });
 
   function renderRecords() {
+    if (S.dead.has('workouts')) { $('#records').innerHTML = '<tr><td colspan="4"><div class="empty">記録を読み込めませんでした。ページを再読み込みしてください。</div></td></tr>'; return; }
     const rs = records();
     $('#records').innerHTML = rs.length ? rs.map((r) => `<tr>
       <td>${esc(r.name)}</td>
@@ -1212,6 +1223,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const photo = S.photo;
     if (!photo && !text) return toast(S.canImages ? '写真を選ぶか、食べたものを入力してください' : '食べたものを入力してください');
     if (!S.sample || S.claudeOff || S.jsonOff || S.foodAbort) return;
+    if (!$('#meal-form').hidden && S.mealDraft) return toast('入力中の食事を保存するかキャンセルしてから推定してください');
     // Fix the day and time now, so navigating while Claude works does not move the meal.
     const day = S.day, time = day === today() ? nowHM() : '12:00';
     const ctrl = new AbortController(); S.foodAbort = ctrl;
@@ -1224,6 +1236,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const out = await S.sample.json(mealPrompt(text, !!photo), opts);
       if (ctrl.signal.aborted) return;
       if (photo && S.photo !== photo) { toast('写真が変更されたため、推定結果を破棄しました'); return; }
+      if (!$('#meal-form').hidden && S.mealDraft) { toast('入力中の食事があるため、推定結果は表示しませんでした'); return; }
       const items = (Array.isArray(out?.items) ? out.items : []).map(cleanItem).filter((i) => i.name);
       if (!items.length) {
         toast(photo ? '写真から食事を読み取れませんでした。補足を書くか、手入力してください' : '食事の内容を読み取れませんでした。料理名と量を書いてみてください');
@@ -1290,8 +1303,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   function discardDraftPhoto() {
     const d = S.mealDraft; if (!d) return;
     if (d.objUrl) URL.revokeObjectURL(d.objUrl);
-    // A photo uploaded by a failed save of this draft is removed when the draft is abandoned.
-    if (d.uploadedHere && d.photoId) deletePhoto(d.photoId);
+    // A photo uploaded by a failed save of this draft is removed when the draft is abandoned
+    // (never while that save is still in flight; the submit handler cleans up after it).
+    if (d.uploadedHere && d.photoId && !d.saving) deletePhoto(d.photoId);
   }
   function openMealForm(m, opts = {}) {
     discardDraftPhoto();
@@ -1341,6 +1355,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const draft = S.mealDraft, editingId = S.editingMealId;
     if (editingId && !S.meals.some((x) => x.id === editingId)) { closeMealForm(); return toast('この食事はすでに削除されています'); }
     const btn = $('#m-save'); if (btn.disabled) return; btn.disabled = true;
+    draft.saving = true;
     try {
       if (!draft.photoId && draft.photoFile) {
         const id = await uploadPhoto(draft.photoFile);
@@ -1366,7 +1381,12 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         setDay(data.date);
         $('#food-summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } catch (err) { toast(dbErrMsg(err)); } finally { btn.disabled = false; }
+    } catch (err) { toast(dbErrMsg(err)); } finally {
+      draft.saving = false;
+      // The draft was abandoned while a failed save was in flight: drop its upload.
+      if (draft.uploadedHere && S.mealDraft !== draft) { deletePhoto(draft.photoId); draft.uploadedHere = false; }
+      btn.disabled = false;
+    }
   });
 
   function renderFood() {
@@ -1477,6 +1497,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   function drawWeightChart() {
     const box = $('#weight-chart'); if (!box || box.offsetParent === null) return;
     const pts = S.weights.filter((w) => w.date >= daysAgo(89)).sort((a, b) => a.date.localeCompare(b.date));
+    if (S.dead.has('weights')) { box.innerHTML = ''; return; }
     if (!pts.length) { box.innerHTML = '<div class="empty">体重を記録すると、直近90日の推移がここに表示されます。</div>'; return; }
     box.innerHTML = '';
     const W = Math.max(260, box.clientWidth), H = 196, L = 44, R = 60, T = 14, B = 26;
@@ -1581,7 +1602,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const w = r1(weight);
     let latest = null;
     for (const x of S.weights) if (!latest || x.date > latest.date) latest = x;
-    const logWeight = !latest || latest.weight !== w;
+    const logWeight = S.loaded.weights && !S.dead.has('weights') && (!latest || latest.weight !== w);
     try {
       await S.db.doc('settings/profile').set({ height: r1(height), weight: w, age, sex, activity, goal, updatedAt: new Date().toISOString() });
       if (logWeight) await S.db.collection('weights').doc(today()).set({ date: today(), weight: w, createdAt: new Date().toISOString() });
@@ -1609,8 +1630,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const tot = pk + fk + ck || 1;
     const pP = Math.round((pk / tot) * 100), pF = Math.round((fk / tot) * 100), pC = ck ? 100 - pP - pF : 0;
     const delta = tg.kcal - tg.tdee;
-    const adj = Math.abs(delta) < 5 ? '±0' : `${delta < 0 ? '−' : '+'}${fmt(Math.abs(delta))} kcal`;
-    const adjLabel = tg.clamped ? '下限に合わせて調整' : tg.goal.note;
+    const adj = (tg.goal.kcalF === 1 && !tg.clamped) || Math.abs(delta) <= 5 ? '±0' : `${delta < 0 ? '−' : '+'}${fmt(Math.abs(delta))} kcal`;
+    const adjLabel = tg.noDeficit ? '消費が少ないため減らさない' : tg.clamped ? '下限に合わせて調整' : tg.goal.note;
     const proteinBase = tg.adjusted ? `調整体重 ${tg.refW}kg（BMI 25 超のため）` : '体重';
     box.innerHTML = `<div class="panel-head"><h2>Daily Target</h2><span class="badge">${esc(tg.goal.label)}</span></div>
       <div class="hero"><span class="hero-v">${fmt(tg.kcal)}</span><span class="hero-u">kcal / 日</span></div>
@@ -1626,7 +1647,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         <dt>目標による調整（${esc(adjLabel)}）</dt><dd>${adj}</dd>
         <dt>BMI</dt><dd>${tg.bmi}（${bmiLabel(tg.bmi)}）</dd>
       </dl>
-      ${tg.clamped ? '<p class="hint">減量でも、基礎代謝と最低ライン（男性 1,500 / 女性・その他 1,200 kcal）を下回らないよう目標を調整しています。</p>' : ''}
+      ${tg.noDeficit ? '<p class="hint">1日の消費カロリーがもともと少ない（男性 1,500 / 女性・その他 1,200 kcal 以下）ため、これ以上は減らさず消費と同じ量を目標にしています。減量は活動量を増やす方法を検討してください。</p>'
+        : tg.clamped ? '<p class="hint">減量でも、基礎代謝と最低ライン（男性 1,500 / 女性・その他 1,200 kcal）を下回らないよう目標を調整しています。</p>' : ''}
       <p class="hint">基礎代謝は Mifflin-St Jeor 式、体重は ${tg.weightDate ? `${md(tg.weightDate)} の記録（${kg(tg.weight)}kg）` : `プロフィールの ${kg(tg.weight)}kg`}で計算。たんぱく質は${proteinBase} 1kg あたり ${tg.goal.pkg}g（エネルギーの 35% まで）、脂質はカロリーの 25%、残りを炭水化物にしています。あくまで目安です。持病がある方や妊娠中・授乳中の方は医師に相談してください。</p>`;
   }
 
@@ -1641,10 +1663,12 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     try {
       await S.db.collection('weights').doc(date).set({ date, weight: w, createdAt: new Date().toISOString() });
       $('#w-value').value = ''; $('#w-date').value = today();
+      S.profileWeightEdited = false; fillProfileForm();
       toast(`${md(date)} の体重 ${kg(w)}kg を記録しました`);
     } catch (err) { toast(dbErrMsg(err)); } finally { btn.disabled = false; }
   });
   function renderWeightList() {
+    if (S.dead.has('weights')) { $('#weight-list').innerHTML = '<li class="more">体重の記録を読み込めませんでした。ページを再読み込みしてください。</li>'; return; }
     const list = [...S.weights].sort((a, b) => b.date.localeCompare(a.date));
     const shown = S.showAllWeights ? list : list.slice(0, 10);
     $('#weight-list').innerHTML = shown.map((w, i) => {
@@ -1668,9 +1692,11 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const L = [`以下は私の直近 ${days} 日間の記録です。内容を把握して、振り返りとアドバイスをしてください。`];
     const tg = computeTargets();
     if (tg) L.push('', `## 目標`, `1日 ${tg.kcal}kcal（P ${tg.protein}g / F ${tg.fat}g / C ${tg.carbs}g）、目標: ${tg.goal.label}、身長 ${S.profile.height}cm、体重 ${tg.weight}kg`);
+    const lostNote = '（このデータは読み込めていません。再読み込みしてください）';
     const ws = sortedWorkouts().filter((w) => w.date >= from);
     L.push('', '## 筋トレ');
-    if (!ws.length) L.push('記録なし');
+    if (S.dead.has('workouts')) L.push(lostNote);
+    else if (!ws.length) L.push('記録なし');
     ws.forEach((w) => L.push(`### ${w.date}${w.title ? ' ' + w.title : ''}`, ...w.exercises.map((e) => `- ${e.name}: ${fmtSets(e.sets)}`), ...(w.notes ? [`- メモ: ${w.notes}`] : [])));
     L.push('', '## 食事（日別合計）');
     let any = false;
@@ -1679,10 +1705,11 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (!t.count) continue; any = true;
       L.push(`- ${d}: ${fmt(t.kcal)}kcal（P ${fmt(t.protein)}g / F ${fmt(t.fat)}g / C ${fmt(t.carbs)}g） ${mealsOn(d).map((m) => m.title).join('、')}`);
     }
-    if (!any) L.push('記録なし');
+    if (S.dead.has('meals')) L.push(lostNote);
+    else if (!any) L.push('記録なし');
     const wts = S.weights.filter((w) => w.date >= from).sort((a, b) => a.date.localeCompare(b.date));
     L.push('', '## 体重');
-    L.push(wts.length ? wts.map((w) => `${w.date}: ${kg(w.weight)}kg`).join(' / ') : '記録なし');
+    L.push(S.dead.has('weights') ? lostNote : wts.length ? wts.map((w) => `${w.date}: ${kg(w.weight)}kg`).join(' / ') : '記録なし');
     return L.join('\n');
   }
   function renderExport() { $('#export').textContent = exportText(Number($('#export-days').value)); }
@@ -1749,7 +1776,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (!a.undone) {
         const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = '取り消す';
         u.setAttribute('aria-label', `取り消す：${a.label}`);
-        u.onclick = () => { if (armDelete(u)) undoAction(a, u); };
+        u.onclick = () => { if (armDelete(u, { text: '確定', hint: 'もう一度押すと取り消します' })) undoAction(a, u); };
         row.append(u);
       }
       el.append(row);
@@ -1784,17 +1811,18 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   $('#chat-photo-clear').onclick = () => setChatPhoto(null);
   const chatInput = $('#chat-input');
   chatInput.addEventListener('input', () => { chatInput.style.height = 'auto'; chatInput.style.height = `${Math.min(140, chatInput.scrollHeight + 2)}px`; });
-  chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#chat-form').requestSubmit(); } });
+  chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (!S.chatAbort) $('#chat-form').requestSubmit(); } });
   $('#chat-form').addEventListener('submit', (e) => { e.preventDefault(); sendChat(chatInput.value); });
   $('#chat-stop').onclick = () => S.chatAbort?.abort();
   $$('#chat-empty [data-prompt]').forEach((b) => b.addEventListener('click', () => sendChat(b.dataset.prompt)));
   $('#chat-clear').onclick = (e) => {
     if (S.chatAbort) return toast('回答中は消せません');
     if (!S.chat.length) return;
-    if (!armDelete(e.currentTarget)) return;
+    const btn = e.currentTarget;
+    if (!armDelete(btn, { text: 'クリアする？', hint: 'もう一度押すと会話を消します' })) return;
     S.chat.forEach((m) => { if (m.imageUrl) URL.revokeObjectURL(m.imageUrl); });
-    S.chat = []; saveChat(); renderChat();
-    e.currentTarget.classList.remove('armed'); e.currentTarget.textContent = '会話をクリア';
+    S.chat = []; saveChat(); renderChat(); applyClaudeAvailability();
+    disarm(btn);
   };
 
   function chatRules() {
@@ -1819,7 +1847,10 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     L.push('', '## プロフィールと目標');
     if (p) L.push(`身長 ${p.height ?? '?'}cm / 体重 ${lw ? `${lw.weight}kg` : '?'} / ${p.age ?? '?'}歳 / ${own(SEX, p.sex) || '性別未設定'} / 活動量: ${own(ACTIVITY, p.activity)?.label || '?'} / 目標: ${own(GOALS, p.goal)?.label || '維持'}`);
     else L.push('未設定（「からだ」タブで設定できる）');
-    if (tg) L.push(`1日の目標: ${tg.kcal}kcal（P ${tg.protein}g / F ${tg.fat}g / C ${tg.carbs}g）、基礎代謝 ${tg.bmr}kcal、TDEE ${tg.tdee}kcal`);
+    if (tg) L.push(`1日の目標: ${tg.kcal}kcal（P ${tg.protein}g / F ${tg.fat}g / C ${tg.carbs}g）、基礎代謝 ${tg.bmr}kcal、TDEE ${tg.tdee}kcal、BMI ${tg.bmi}`);
+    if (tg?.cutBlocked) L.push('※ BMI が 18.5 未満のため、アプリは減量目標を止めて維持カロリーを表示している。減量・カロリー制限は勧めない');
+    if (tg?.noDeficit) L.push('※ 消費カロリーが少ないため、アプリは食事を減らす目標にしていない。極端な食事制限は勧めない');
+    if (Number(p?.age) > 0 && Number(p.age) < 18) L.push('※ 18 歳未満のため目標は計算していない。カロリー制限は勧めず、保護者・医師・管理栄養士への相談をすすめる');
     const t = dayTotals(today());
     const lost = [...S.dead].map((k) => ({ workouts: '筋トレ', meals: '食事', weights: '体重', profile: 'プロフィール' }[k])).filter(Boolean);
     if (lost.length) L.push('', `※ ${lost.join('・')}のデータは読み込めていない（記録なしとは限らない）`);
@@ -1846,7 +1877,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     return L.join('\n').slice(0, 24000);
   }
   function turnContent(m) {
-    let c = m.content || '';
+    let c = (m.content || '').slice(0, 3500);
     if (m.actions?.length) c += `\n［記録済み: ${m.actions.map((a) => `${a.label}${a.undone ? '（ユーザーが取り消し）' : ''}`).join(' / ')}］`;
     return c.trim();
   }
@@ -1902,7 +1933,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       {
         name: 'log_meal',
         description: '食事を記録する。ユーザーが食べたものを報告したり食事の写真を送ったら、品目ごとの量と栄養素を推定して確認せずに使う。記録した合計を返す。',
-        inputSchema: MEAL_SCHEMA,
+        inputSchema: ctx.photo ? { ...MEAL_SCHEMA, required: [...MEAL_SCHEMA.required, 'from_photo'] } : MEAL_SCHEMA,
         async execute(input, { signal }) {
           need();
           const data = validateMeal(input);
@@ -1963,13 +1994,14 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
         execute(input) {
           const days = Math.min(730, Math.max(1, Math.round(Number(input.days) || 90)));
           const q = String(input.exercise || '').toLowerCase();
-          const rows = sortedWorkouts().filter((w) => w.date >= daysAgo(days - 1))
+          const all = sortedWorkouts().filter((w) => w.date >= daysAgo(days - 1))
             .map((w) => ({ date: w.date, title: w.title, exercises: w.exercises.filter((e) => !q || e.name.toLowerCase().includes(q)).map((e) => `${e.name} ${fmtSets(e.sets)}`.slice(0, 300)) }))
-            .filter((w) => w.exercises.length).slice(0, 40);
+            .filter((w) => w.exercises.length);
+          const rows = all.slice(0, 40);
           // Keep the result well under the 32 KB tool-result limit.
           const enc = new TextEncoder(); const out = []; let bytes = 64;
           for (const r of rows) { const n = enc.encode(JSON.stringify(r)).length + 1; if (bytes + n > 16000) break; out.push(r); bytes += n; }
-          return { workouts: out, omitted: rows.length - out.length };
+          return { workouts: out, omitted: all.length - out.length, oldestIncluded: out.length ? out[out.length - 1].date : null };
         },
       },
     ];
@@ -2016,9 +2048,10 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     checkDayRollover();
     const text = String(raw || '').trim();
     const photo = S.chatPhoto;
+    if (S.chatAbort) return;
     if (!text && !photo) return toast('メッセージを入力してください');
     if (!S.sample || S.claudeOff) return;
-    if (S.chatAbort) return;
+    if (S.dbState === 'pending') return toast('接続中です。少し待ってから送ってください');
     if (bytes(text) > 20000) return toast('メッセージが長すぎます。短くして送ってください');
     const userMsg = { role: 'user', display: text, hadImage: !!photo, imageUrl: photo?.url || null,
       content: photo ? `${text ? text + '\n' : ''}［写真を1枚添付］` : text };
@@ -2038,7 +2071,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       let budget = (S.maxPromptBytes || 262144) - 16384 - bytes(lead) - bytes(userMsg.content);
       const history = [];
       for (const m of S.chat.filter((x) => x !== reply && x !== userMsg && !x.pending).slice(-16).reverse()) {
-        const c = turnContent(m).slice(0, 4000);
+        const c = turnContent(m);
         if (!c) continue;
         const n = bytes(c);
         if (n > budget) break;
@@ -2060,6 +2093,16 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const res = await S.sample(input, opts);
       reply.content = res.text;
       if (res.truncated) reply.error = '回答が途中で切れました。';
+      // One meal logged from a photo message without the flag: attach the photo to it anyway.
+      const meals = reply.actions.filter((x) => x.kind === 'meal');
+      if (photo && !ctx.photoUsed && meals.length === 1 && S.db) {
+        ctx.photoUsed = true;
+        const id = await uploadPhoto(photo.file);
+        if (id) {
+          try { await S.db.collection('meals').doc(meals[0].id).update({ photoId: id }); meals[0].photoId = id; saveChat(); }
+          catch { deletePhoto(id); }
+        }
+      }
     } catch (err) {
       if (err?.code === 'cancelled') { reply.content = err.text || reply.content || ''; if (!reply.content && !reply.actions.length) reply.error = '停止しました。'; }
       else if (err?.code === 'refused') { reply.content = ''; reply.error = sampleErrMsg(err, 'sample'); }
@@ -2069,7 +2112,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (S.chatAbort === ctrl) S.chatAbort = null;
       setChatBusy(false);
       if (!reply.content && !reply.actions.length && !reply.error) reply.error = '回答がありませんでした。';
-      saveChat(); renderChat(); scrollChatToEnd();
+      const follow = nearBottom();
+      saveChat(); renderChat();
+      if (follow) scrollChatToEnd();
       $('#chat-status').textContent = [
         reply.content ? `Claude: ${reply.content.slice(0, 200)}` : reply.error,
         ...reply.actions.map((x) => `記録: ${x.label}`),
@@ -2130,7 +2175,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   showTab(initial);
 
   if (!window.claude?.use) {
-    S.sampleState = 'off'; applyClaudeAvailability();
+    S.sampleState = 'off'; S.dbState = 'off'; applyClaudeAvailability();
     $('#status').textContent = 'オフライン表示（保存できません）'; $('#status').classList.add('err');
     Object.keys(S.loaded).forEach((k) => { S.loaded[k] = true; });
     renderAll();
@@ -2157,11 +2202,12 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   const syncError = (key) => () => { S.dead.add(key); S.loaded[key] = true; renderAll(); };
   claude.use('db').then((db) => {
     if (!db) {
+      S.dbState = 'off';
       $('#status').textContent = 'サインインすると保存できます'; $('#status').classList.add('err');
       Object.keys(S.loaded).forEach((k) => { S.loaded[k] = true; });
       applyClaudeAvailability(); renderAll(); return;
     }
-    S.db = db;
+    S.db = db; S.dbState = 'ready';
     applyClaudeAvailability();
     const sub = (query, key, norm) => query.onSnapshot((snap) => {
       S[key] = snap.docs.map(norm).filter((x) => validDate(x.date));
