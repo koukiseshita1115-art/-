@@ -87,7 +87,7 @@
 
   /* segmented controls (sub tabs and radio choices) */
   .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
-  .seg button, .seg label { background: none; border: none; border-radius: 7px; padding: 8px 6px; font-size: 13px; font-weight: 500; color: var(--muted); text-align: center; margin: 0; letter-spacing: 0; cursor: pointer; }
+  .seg button, .seg label { white-space: nowrap; background: none; border: none; border-radius: 7px; padding: 8px 4px; font-size: 13px; font-weight: 500; color: var(--muted); text-align: center; margin: 0; letter-spacing: 0; cursor: pointer; }
   .seg button[aria-selected="true"], .seg label:has(input:checked) { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
   .seg.inset { background: var(--bg); }
   .seg label:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -240,6 +240,7 @@
   .composer { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; display: grid; gap: 8px; box-shadow: 0 -4px 20px rgb(0 0 0 / .06); }
   .composer-row { display: flex; gap: 8px; align-items: flex-end; }
   .composer-row textarea { flex: 1 1 auto; min-width: 0; }
+  .composer-row > .icon-btn, .composer-row > .row { flex: none; }
   .composer-row .btn { white-space: nowrap; }
   .composer textarea { min-height: 44px; max-height: 140px; resize: none; padding: 10px 12px; }
   .composer .icon-btn { border: none; background: var(--claude-soft); color: var(--claude); }
@@ -706,11 +707,11 @@
     const minKcal = p.sex === 'male' ? 1500 : 1200;
     const noDeficit = goal.kcalF < 1 && tdee <= minKcal;
     if (noDeficit) { kcal = Math.floor(tdee / 10) * 10; clamped = true; }
-    else {
+    else if (goal.kcalF < 1) {
       const floor = Math.max(bmr, minKcal);
       if (kcal < floor) { kcal = Math.min(Math.ceil(floor / 10) * 10, Math.floor(tdee / 10) * 10); clamped = true; }
       else kcal = Math.round(kcal / 10) * 10;
-    }
+    } else kcal = Math.round(kcal / 10) * 10;
     // Protein per kg of body weight; with BMI over 25 use an adjusted weight (ideal + 25% of the excess), capped at 35% of energy.
     const ibw = 22 * hm * hm;
     const refW = bmi > 25 ? ibw + 0.25 * (w - ibw) : w;
@@ -729,7 +730,7 @@
     if (!TABS.includes(name)) name = 'train';
     currentTab = name;
     $$('nav.tabs button').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === name ? 'page' : 'false'));
-    document.documentElement.style.scrollPaddingBottom = name === 'claude' ? 'calc(260px + env(safe-area-inset-bottom, 0px))' : '';
+    document.documentElement.style.scrollPaddingBottom = '';
     TABS.forEach((t) => { $(`#tab-${t}`).hidden = t !== name; });
     try { localStorage.setItem('wl-tab', name); } catch {}
     window.scrollTo(0, 0);
@@ -922,8 +923,11 @@
       const rows = $$('.set', ex);
       for (let i = 0; i < rows.length; i++) {
         const w = rows[i].querySelector('.w'), r = rows[i].querySelector('.r');
-        if (w.value !== '' && Number(w.value) < 0) { w.focus(); return `「${name}」${i + 1}セット目の重量は 0 以上で入力してください`; }
-        if (w.value !== '' && !(Number.isInteger(Number(r.value)) && Number(r.value) > 0)) { r.focus(); return `「${name}」${i + 1}セット目の回数を入力してください`; }
+        const hasW = w.value !== '' || w.validity.badInput, hasR = r.value !== '' || r.validity.badInput;
+        if (!hasW && !hasR) continue;
+        if (w.validity.badInput || (w.value !== '' && !(Number(w.value) >= 0 && Number(w.value) <= 1000))) { w.focus(); return `「${name}」${i + 1}セット目の重量は 0〜1000 kg で入力してください`; }
+        const n = Number(r.value);
+        if (r.validity.badInput || !(Number.isInteger(n) && n >= 1 && n <= 1000)) { r.focus(); return `「${name}」${i + 1}セット目の回数を 1〜1000 の整数で入力してください`; }
       }
     }
     return '';
@@ -1053,7 +1057,7 @@ ${text}
     btn.dataset.label = btn.textContent;
     if (al !== null) btn.dataset.aria = al;
     btn.textContent = text;
-    btn.setAttribute('aria-label', `${hint}${al ? '：' + al : ''}`);
+    btn.setAttribute('aria-label', `${text}：${hint}${al ? '（' + al + '）' : ''}`);
     toast(hint);
     setTimeout(() => { if (btn.isConnected && btn.classList.contains('armed')) disarm(btn); }, 3000);
     return false;
@@ -1451,7 +1455,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   function drawKcalChart() {
     const box = $('#kcal-chart'); if (!box || box.offsetParent === null) return;
     const data = kcalSeries(); const tg = computeTargets(); const target = tg?.kcal || 0;
-    const W = Math.max(260, box.clientWidth), H = 196, L = 44, R = 8, T = 18, B = 26;
+    const W = Math.max(200, box.clientWidth), H = 196, L = 44, R = 8, T = 18, B = 26;
     const top = Math.max(...data.map((d) => d.kcal), target, 400);
     const step = niceStep(top / 4); const max = Math.ceil(top / step) * step;
     const pw = W - L - R, ph = H - T - B, slot = pw / 7, bw = Math.min(24, slot * 0.56);
@@ -1466,7 +1470,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const x = L + slot * i + (slot - bw) / 2, cx = x + bw / 2;
       if (d.kcal > 0) svg.append(svgEl('path', { d: colPath(x, y(d.kcal), bw, y(0)), fill: 'var(--accent)', opacity: d.date === S.day ? 1 : 0.55 }));
       const lab = svgEl('text', { x: cx, y: H - 8, 'text-anchor': 'middle', class: d.date === S.day ? 'strong' : '' });
-      lab.textContent = `${md(d.date)}`; svg.append(lab);
+      // Narrow screens: day only, with the month on the first column and on the 1st.
+      lab.textContent = slot >= 36 || i === 0 || d.date.endsWith('-01') ? md(d.date) : String(Number(d.date.slice(8)));
+      svg.append(lab);
       if (d.date === S.day && d.kcal > 0) {
         const v = svgEl('text', { x: cx, y: y(d.kcal) - 6, 'text-anchor': 'middle', class: 'strong', ...HALO }); v.textContent = fmt(d.kcal); svg.append(v);
       }
@@ -1475,8 +1481,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const show = () => tip.show(cx, y(Math.max(d.kcal, 0)), d.count ? `${fmt(d.kcal)} kcal` : '記録なし', `${md(d.date)}（${weekday(d.date)}）${target ? ` / 目標 ${fmt(target)}` : ''}`);
       hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show);
       hit.addEventListener('pointerleave', tip.hide); hit.addEventListener('blur', tip.hide);
-      hit.addEventListener('click', () => setDay(d.date));
-      hit.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDay(d.date); } });
+      hit.addEventListener('click', () => { hit.blur(); tip.hide(); setDay(d.date); });
+      hit.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.kcalKeyFocus = d.date; setDay(d.date); } });
       svg.append(hit);
     });
     if (target) {
@@ -1487,10 +1493,13 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const t = svgEl('text', { x: clash ? L + 4 : W - R, y: y(target) - 5, 'text-anchor': clash ? 'start' : 'end', 'pointer-events': 'none', ...HALO });
       t.textContent = `目標 ${fmt(target)}`; svg.append(t);
     }
-    const hadFocus = !!document.activeElement?.closest?.('#kcal-chart rect.hit');
+    // Keep keyboard focus on the same column across redraws (snapshots, resize, Enter on a column).
+    const focused = document.activeElement?.closest?.('#kcal-chart rect.hit');
+    const focusDate = S.kcalKeyFocus || (focused && focused.matches(':focus-visible') ? focused.dataset.date : null);
+    S.kcalKeyFocus = null;
     box.querySelector('svg')?.remove();
     box.prepend(svg);
-    if (hadFocus) svg.querySelector(`rect.hit[data-date="${S.day}"]`)?.focus();
+    if (focusDate) (svg.querySelector(`rect.hit[data-date="${focusDate}"]`) || svg.querySelector(`rect.hit[data-date="${S.day}"]`))?.focus();
     box.querySelectorAll('.tip').forEach((el, i, all) => { if (i < all.length - 1) el.remove(); });
   }
 
@@ -1499,6 +1508,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     const pts = S.weights.filter((w) => w.date >= daysAgo(89)).sort((a, b) => a.date.localeCompare(b.date));
     if (S.dead.has('weights')) { box.innerHTML = ''; return; }
     if (!pts.length) { box.innerHTML = '<div class="empty">体重を記録すると、直近90日の推移がここに表示されます。</div>'; return; }
+    const hadFocus = !!box.querySelector('svg') && document.activeElement === box.querySelector('svg');
+    const keepDate = box.dataset.focusDate;
     box.innerHTML = '';
     const W = Math.max(260, box.clientWidth), H = 196, L = 44, R = 60, T = 14, B = 26;
     const pw = W - L - R, ph = H - T - B;
@@ -1537,9 +1548,11 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     box.append(svg);
     const tip = makeTip(box);
     let idx = last;
+    if (hadFocus && keepDate) { const k = pts.findIndex((p) => p.date === keepDate); if (k >= 0) idx = k; }
     const focusIdx = (i) => {
       idx = Math.max(0, Math.min(last, i));
       const p = pts[idx], cx = xs[idx], cy = y(p.weight);
+      box.dataset.focusDate = p.date;
       cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
       dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('visibility', 'visible');
       const prev = idx > 0 ? r1(p.weight - pts[idx - 1].weight) : null;
@@ -1563,6 +1576,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (e.key === 'ArrowLeft') { e.preventDefault(); focusIdx(idx - 1); }
       if (e.key === 'ArrowRight') { e.preventDefault(); focusIdx(idx + 1); }
     });
+    if (hadFocus) svg.focus();
   }
   function renderCharts() {
     if (currentTab === 'food') drawKcalChart();
@@ -1678,7 +1692,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     }).join('') + (list.length > 10 ? `<li class="more"><button type="button" class="ghost" data-wmore>${S.showAllWeights ? '最新 10 件だけ表示' : `すべて表示（${list.length}件）`}</button></li>` : '');
   }
   $('#weight-list').addEventListener('click', async (e) => {
-    if (e.target.closest('[data-wmore]')) { S.showAllWeights = !S.showAllWeights; renderWeightList(); return; }
+    if (e.target.closest('[data-wmore]')) { S.showAllWeights = !S.showAllWeights; renderWeightList(); $('#weight-list [data-wmore]')?.focus(); return; }
     const b = e.target.closest('[data-wdel]'); if (!b) return;
     if (!armDelete(b)) return;
     b.disabled = true;
@@ -1728,7 +1742,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     return { kind: String(a.kind), id: String(a.id), label: String(a.label || ''), photoId: typeof a.photoId === 'string' ? a.photoId : null,
       prev: a.prev && typeof a.prev === 'object' ? { date: String(a.prev.date), weight: Number(a.prev.weight), createdAt: a.prev.createdAt || null } : null,
       wrote: a.wrote && typeof a.wrote === 'object' ? { weight: Number(a.wrote.weight), createdAt: a.wrote.createdAt || null } : null,
-      undone: !!a.undone };
+      undone: !!a.undone, stale: !!a.stale };
   }
   function loadChat() {
     try {
@@ -1771,9 +1785,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     }
     for (const a of m.actions || []) {
       const row = document.createElement('div'); row.className = `action${a.undone ? ' undone' : ''}`;
-      const lab = document.createElement('span'); lab.textContent = `✓ ${a.label}`;
+      const lab = document.createElement('span'); lab.textContent = `✓ ${a.label}${a.stale ? '（その後変更済みのため取り消し不可）' : ''}`;
       row.append(lab);
-      if (!a.undone) {
+      if (!a.undone && !a.stale) {
         const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = '取り消す';
         u.setAttribute('aria-label', `取り消す：${a.label}`);
         u.onclick = () => { if (armDelete(u, { text: '確定', hint: 'もう一度押すと取り消します' })) undoAction(a, u); };
@@ -1814,6 +1828,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (!S.chatAbort) $('#chat-form').requestSubmit(); } });
   $('#chat-form').addEventListener('submit', (e) => { e.preventDefault(); sendChat(chatInput.value); });
   $('#chat-stop').onclick = () => S.chatAbort?.abort();
+  // Controls in the chat log sit above the sticky composer; reserve its height only while they have focus.
+  $('#chat-log').addEventListener('focusin', () => { document.documentElement.style.scrollPaddingBottom = 'calc(260px + env(safe-area-inset-bottom, 0px))'; });
+  $('#chat-log').addEventListener('focusout', () => { document.documentElement.style.scrollPaddingBottom = ''; });
   $$('#chat-empty [data-prompt]').forEach((b) => b.addEventListener('click', () => sendChat(b.dataset.prompt)));
   $('#chat-clear').onclick = (e) => {
     if (S.chatAbort) return toast('回答中は消せません');
@@ -1878,7 +1895,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
   }
   function turnContent(m) {
     let c = (m.content || '').slice(0, 3500);
-    if (m.actions?.length) c += `\n［記録済み: ${m.actions.map((a) => `${a.label}${a.undone ? '（ユーザーが取り消し）' : ''}`).join(' / ')}］`;
+    if (m.actions?.length) c += `\n［記録済み: ${m.actions.map((a) => `${a.label}${a.undone ? '（ユーザーが取り消し）' : a.stale ? '（その後ユーザーが編集・削除）' : ''}`).join(' / ')}］`;
     return c.trim();
   }
 
@@ -1940,6 +1957,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
           if (signal.aborted) throw new Error('中止されました');
           const before = dayTotals(data.date);
           let photoId = null;
+          if (typeof input.from_photo === 'boolean') ctx.photoFlagSeen = true;
           if (ctx.photo && !ctx.photoUsed && input.from_photo === true) {
             ctx.photoUsed = true;
             photoId = await uploadPhoto(ctx.photo.file);
@@ -2017,9 +2035,9 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       const cur = await ref.get();
       const d = cur.exists ? cur.data() : null;
       // Undo only what Claude wrote: a record changed or removed since then is left alone.
-      const changed = !d || d.updatedAt || (a.kind === 'weight' && (!a.wrote || Number(d.weight) !== a.wrote.weight || d.createdAt !== a.wrote.createdAt));
+      const changed = !d || d.updatedAt || (a.kind === 'weight' && a.wrote && (Number(d.weight) !== a.wrote.weight || d.createdAt !== a.wrote.createdAt));
       if (changed) {
-        a.undone = true; saveChat(); renderChat();
+        a.stale = true; saveChat(); renderChat();
         toast('この記録はその後変更・削除されているため、取り消しませんでした');
         return;
       }
@@ -2095,7 +2113,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (res.truncated) reply.error = '回答が途中で切れました。';
       // One meal logged from a photo message without the flag: attach the photo to it anyway.
       const meals = reply.actions.filter((x) => x.kind === 'meal');
-      if (photo && !ctx.photoUsed && meals.length === 1 && S.db) {
+      if (photo && !ctx.photoUsed && !ctx.photoFlagSeen && meals.length === 1 && S.db) {
         ctx.photoUsed = true;
         const id = await uploadPhoto(photo.file);
         if (id) {
@@ -2232,7 +2250,7 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     S.maxImageBytes = lim?.images?.maxInputBytes || 0;
     S.canTools = !!lim?.tools;
     S.toolMax = lim?.tools?.maxCount || 0;
-    applyClaudeAvailability(); renderChat();
+    applyClaudeAvailability(); renderChat(); scrollChatToEnd();
   });
   claude.use('assets').then((a) => { S.assets = a || null; });
 })();
