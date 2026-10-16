@@ -339,12 +339,9 @@
 
     <div class="panel" id="food-add">
       <h2>Add Meal</h2>
-      <div class="row" id="food-buttons">
-        <label class="btn claude" id="photo-label" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>写真を選ぶ
-          <input type="file" id="photo-input" accept="image/*" class="vh">
-        </label>
-        <button type="button" class="btn" id="manual-btn">手入力</button>
+      <div id="food-text-wrap">
+        <label for="food-text" id="food-text-label">食べたもの</label>
+        <textarea id="food-text" placeholder="例: 牛丼並盛と味噌汁、サラダ（ごまドレッシング）"></textarea>
       </div>
       <div class="photo-preview" id="photo-preview" hidden>
         <img id="photo-img" alt="選んだ食事の写真">
@@ -353,15 +350,18 @@
           <button type="button" class="ghost danger" id="photo-clear" style="justify-self:start">写真を外す</button>
         </div>
       </div>
-      <div id="food-text-wrap" hidden>
-        <label for="food-text" id="food-text-label">食べたもの</label>
-        <textarea id="food-text" placeholder="例: 牛丼並盛と味噌汁、サラダ（ごまドレッシング）"></textarea>
+      <div class="row" id="food-photo-row">
+        <label class="btn claude" id="photo-label" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>写真を選ぶ
+          <input type="file" id="photo-input" accept="image/*" class="vh">
+        </label>
       </div>
-      <div class="row end" id="food-est-row" hidden>
+      <div class="row end" id="food-buttons">
         <button type="button" class="btn" id="food-stop" hidden>停止</button>
-        <button type="button" class="btn primary" id="food-estimate">Claude で推定</button>
+        <button type="button" class="btn" id="manual-btn">自分で入力</button>
+        <button type="button" class="btn primary" id="food-estimate" hidden>Claude で推定</button>
       </div>
-      <p class="hint" id="food-hint">写真か食べたものの説明から Claude が栄養素を推定します。保存前に内容を確認・修正できます。</p>
+      <p class="hint" id="food-hint">食べたものを書いて「自分で入力」を押すと、カロリーなどを入れるフォームが開きます。</p>
     </div>
 
     <form class="panel" id="meal-form" novalidate hidden>
@@ -827,11 +827,18 @@
     if (!(on && S.canImages) && S.chatPhoto) setChatPhoto(null);
     $('#quick').hidden = !jsonOn;
     $('#photo-label').hidden = !(jsonOn && S.canImages);
-    $('#food-text-wrap').hidden = !jsonOn;
-    $('#food-est-row').hidden = !jsonOn;
-    $('#food-hint').textContent = pending ? 'Claude を準備しています…'
-      : jsonOn ? (S.canImages ? '写真か食べたものの説明から Claude が栄養素を推定します。保存前に内容を確認・修正できます。' : '食べたものを書くと Claude が栄養素を推定します。保存前に内容を確認・修正できます。')
-      : '「手入力」から食事を記録できます。';
+    $('#food-photo-row').hidden = $('#photo-label').hidden;
+    const est = $('#food-estimate');
+    est.hidden = !(jsonOn || pending);
+    if (!S.foodAbort) { est.disabled = pending; est.textContent = pending ? 'Claude 準備中…' : 'Claude で推定'; }
+    $('#manual-btn').classList.toggle('primary', !jsonOn && !pending);
+    $('#food-hint').textContent = pending ? 'Claude を準備しています。待たずに「自分で入力」でも記録できます。'
+      : jsonOn ? (S.canImages
+        ? '写真を選ぶか食べたものを書いて「Claude で推定」を押すと、栄養素を推定してフォームに入れます。保存前に確認・修正できます。'
+        : '食べたものを書いて「Claude で推定」を押すと、栄養素を推定してフォームに入れます。保存前に確認・修正できます。')
+      : S.claudeOffReason === 'not_granted'
+        ? 'Claude の利用が許可されていないため、推定は使えません。食べたものを書いて「自分で入力」を押し、カロリーなどを入れてください（ページを開き直すと許可をもう一度確認できます）。'
+        : 'この画面では Claude の推定が使えません。食べたものを書いて「自分で入力」を押し、カロリーなどを入れてください。';
     $('#chat-pending').hidden = !pending;
     $('#chat-off').hidden = on || pending;
     $('#chat-off-text').textContent = S.claudeOffReason === 'not_granted'
@@ -1259,15 +1266,18 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
       if (S.foodAbort === ctrl) S.foodAbort = null;
       btn.disabled = false; btn.textContent = 'Claude で推定';
       $('#food-stop').hidden = true;
+      applyClaudeAvailability();
     }
   };
   $('#food-stop').onclick = () => S.foodAbort?.abort();
   $('#manual-btn').onclick = () => {
     checkDayRollover();
     S.foodAbort?.abort();
+    const text = $('#food-text').value.trim().replace(/\s+/g, ' ');
     const time = S.day === today() ? nowHM() : '12:00';
-    openMealForm({ date: S.day, time, type: guessMealType(time), title: '', items: [{ name: '', amount: '', kcal: '', protein: '', fat: '', carbs: '' }] },
-      { source: 'manual', focus: true });
+    openMealForm({ date: S.day, time, type: guessMealType(time), title: text.slice(0, 60), items: [{ name: text.slice(0, 80), amount: '', kcal: '', protein: '', fat: '', carbs: '' }] },
+      { source: 'manual', sourceText: text || null, focus: text ? 'kcal' : 'title',
+        banner: 'カロリーと PFC（分かる範囲で）を入れて「保存」を押してください。品目は「＋ 品目を追加」で増やせます。' });
   };
 
   // --- meal draft editor
@@ -1335,7 +1345,8 @@ ${text ? `\n${hasPhoto ? 'ユーザーの補足' : '食事の内容'}:\n"""\n${t
     $('#m-save').textContent = S.editingMealId ? '更新' : '保存';
     $('#meal-form').hidden = false;
     $('#meal-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (opts.focus) $('#m-title').focus({ preventScroll: true });
+    if (opts.focus === 'kcal') $('#m-items .i-kcal')?.focus({ preventScroll: true });
+    else if (opts.focus) $('#m-title').focus({ preventScroll: true });
   }
   function closeMealForm() {
     discardDraftPhoto();
